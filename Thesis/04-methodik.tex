@@ -1,0 +1,323 @@
+\chapter{Methodik und Versuchsaufbau}
+\label{ch:methodology}
+
+Basierend auf den theoretischen Grundlagen in \cref{ch:fundamentals} und der in \cref{ch:state-of-the-art} aufgezeigten Forschungslücke beschreibt dieses Kapitel den empirischen Versuchsaufbau zur Überprüfung der vier Hypothesen aus \cref{ss:hypotheses}.
+
+% ─────────────────────────────────────────────
+\section{Definition der Test-Szenarien und Testmatrix}
+\label{s:test-scenarios}
+% ─────────────────────────────────────────────
+
+Für die empirische Überprüfung der Hypothesen H1 bis H4 aus \cref{ss:hypotheses} werden die beiden unabhängigen Variablen UI-Dichte~$n$ und Update-Frequenz~$f$ betrachtet. Die UI-Dichte beschreibt die Anzahl gleichzeitig gerenderter Komponenten, während die Update-Frequenz~$f$ die Häufigkeit von Datenänderungen angibt und aus dem Zeitabstand~$\Delta t$ zwischen zwei aufeinanderfolgenden Änderungen abgeleitet wird. Gemeinsam definieren beide Variablen den Untersuchungsbereich der Experimente, der sowohl praxisrelevante Lastszenarien als auch den theoretisch bestimmten Tipping Point (\cref{sss:tipping-point}) einschließt.
+
+\subsection{Szenario A: Variierende UI-Dichte}
+\label{ss:scenario-a}
+
+Die UI-Dichte ergibt sich aus der Anzahl~$n$ der gleichzeitig im Grid dargestellten Zellen. Insgesamt sind acht Abstufungen definiert:
+\begin{equation}
+	n \;\in\; \{100,\;400,\;900,\;1600,\;4000,\;6000,\;8000,\;10\,000\}
+\end{equation}
+ Die Skalierung ist so angelegt, um sowohl den unteren Lastbereich ($n \leq 900$) als auch den Übergangsbereich ($n \geq 1600$), in dem die Abstraktionskosten beider Frameworks unterschiedlich stark wachsen, ausreichend detailliert zu erfassen. Die Stufen $n \in \{1600, 4000, 6000, 8000\}$ bilden den Bereich ab, in dem Reacts baumabhängige Reconciliation-Kosten erwartungsgemäß stärker skalieren als Sveltes feingranulare Reaktivität (\cref{sss:finegraned-reactivity}). Die höchste Stufe $n = 10\,000$ stellt bei hohen Updatefrequenzen eine Extrembelastung dar, die auch Svelte an seine theoretischen Grenzen bringt (\cref{sss:theoretical-limitations}). In jedem Tick werden exakt $\lceil n \cdot 0{,}05 \rceil$ Zellen verändert, also 5\,\% der Gesamtmenge. Diese Größe stellt sicher, dass pro Frame ausreichend sichtbare Renderarbeit entsteht, um Unterschiede in der Reaktivität beider Frameworks erkennbar zu machen, ohne das gesamte Grid neu zu aktualisieren. Würden alle Zellen gleichzeitig aktualisiert, gingen die Effekte der feingranularen Signal-Auflösung (\cref{sss:finegraned-reactivity}) verloren, da dann ohnehin jede Zelle neu gerendert werden müsste. Die Auswahl der pro Tick veränderten Zellen erfolgt durch eine zufällige Auswahl ohne Zurücklegen \cite{knuth-taocp2-1998}. Ein Bailout-Guard stellt zudem bei jeder Änderung sicher, dass sich der neue Zellwert vom bisherigen unterscheidet (vgl. \cref{ss:impl-mockengine}).
+
+\subsection{Szenario B: Variierende Update-Frequenz}
+\label{ss:scenario-b}
+
+Die Update-Frequenz ergibt sich aus dem Tick-Intervall~$\Delta t$. Vier Stufen bilden unterschiedliche Anwendungsszenarien ab (\cref{tab:frequency-stages}):
+
+\noindent Die Stufe $\Delta t = \qty{16}{ms}$ nähert sich dem in \cref{sss:frame-budget} beschriebenen kritischen Frame-Budget von $1000\,\mathrm{ms} / 60 \approx 16{,}7\,\mathrm{ms}$ an und stellt mit $\approx\qty{62{,}5}{Hz}$ die praktisch maximale Updaterate dar, bei der ein Framework theoretisch noch eine flüssige Darstellung gewährleisten kann. Die dazwischen liegenden Stufen (50\,ms und 33\,ms) dienen dazu, den Übergangsbereich zwischen geringer und kritischer Systemlast präzise zu bestimmen und die Entwicklung der in \cref{ss:abstraction-costs} behandelten Abstraktionskosten über den gesamten Frequenzbereich hinweg nachzuvollziehen. Die Tick-Anzahl je Frequenzstufe wird so festgelegt, dass ein Durchlauf etwa \qty{10}{s} dauert (Ausnahme: $\Delta t = \qty{16}{ms}$ mit 500 Ticks und rund \qty{8}{s}). Bei sehr hoher Dichte ($n \geq 8000$) kann die tatsächliche Laufzeit, insbesondere beim 16-ms-Intervall, in React deutlich über der vorgesehenen Zieldauer liegen, da der Web-Worker-Timer auf einem separaten Thread Ticks schneller erzeugt, als der Main-Thread sie verarbeiten kann (\cref{sss:disturbances}). Die primäre Performance-Metrik \textit{scriptingMsPerTick} (\cref{ss:normalization}) ist so normalisiert, dass sie von der tatsächlichen Gesamtlaufzeit unabhängig bleibt.
+\begin{table}[H]
+	\centering
+	\caption[Frequenzstufen des Szenarios B]{Frequenzstufen des Szenarios B einschließlich der jeweiligen Frequenz, der Tick-Anzahl pro Messdurchlauf sowie des betrachteten Anwendungskontexts:}
+	\label{tab:frequency-stages}
+	\begin{tabular}{rrrp{6cm}}
+		\hline
+		Intervall $\Delta t$ & Frequenz $f$ & Ticks/Run & Betrachteter Anwendungskontext \\
+		\hline
+		\qty{100}{ms} & \qty{10}{Hz}          & 100 & Seltene UI-Updates (z.\,B. zyklische Dashboard-Aktualisierung) \\
+		\qty{50}{ms}  & \qty{20}{Hz}          & 200 & Moderate Aktualisierungsrate (z.\,B. Live-Monitoring von Serverprozessen) \\
+		\qty{33}{ms}  & $\approx$\qty{30}{Hz} & 300 & Hohe Updatefrequenz, Halbierung der Bildwiederholrate \\
+		\qty{16}{ms}  & $\approx$\qty{62}{Hz} & 500 & Volllast nahe der 60-fps-Grenze \\
+		\hline
+	\end{tabular}
+\end{table}
+
+\subsection{Kombinierte Testmatrix}
+\label{ss:test-matrix}
+
+Aus den acht Dichtestufen (Szenario A) und den vier Frequenzstufen (Szenario B), jeweils für beide Frameworks, ergibt sich die vollständige Testmatrix:
+\begin{equation}
+	8 \;\times\; 4 \;\times\; 2 \;=\; 64 \text{ Szenarien}
+\end{equation}
+Jedes Szenario wird $N = 10$ Mal wiederholt (vgl. \cref{ss:statistical-methodology}), sodass für die Performance-Messung insgesamt $640$ Benchmark-Läufe anfallen. Mit dem separat ausgeführten Speicher-Benchmark (\cref{ss:memory-measurement}) sowie dem INP-Benchmark (\cref{sss:inp-trigger}) ergibt sich eine Gesamtanzahl von \num{1920} Läufen bei einer geschätzten Gesamtlaufzeit von ca. sieben bis acht Stunden. Tabelle \ref{tab:test-matrix} zeigt die Testmatrix für ein einzelnes Framework. Die Zellenwerte geben die Tick-Anzahl des jeweiligen Szenarios an.
+
+\begin{table}[htbp]
+	\centering
+	\caption[Testmatrix (pro Framework)]{Testmatrix mit allen Kombinationen aus UI-Dichte ($n$) und Tick-Intervall ($\Delta t$) für ein Framework. Zellenwerte: Ticks pro Run.}
+	\label{tab:test-matrix}
+	\begin{tabular}{r|rrrr}
+		\hline
+		& \multicolumn{4}{c}{Tick-Intervall $\Delta t$} \\
+		$n$ & \qty{100}{ms} & \qty{50}{ms} & \qty{33}{ms} & \qty{16}{ms} \\
+		\hline
+		100   & 100 & 200 & 300 & 500 \\
+		400   & 100 & 200 & 300 & 500 \\
+		900   & 100 & 200 & 300 & 500 \\
+		1600  & 100 & 200 & 300 & 500 \\
+		4000  & 100 & 200 & 300 & 500 \\
+		6000  & 100 & 200 & 300 & 500 \\
+		8000  & 100 & 200 & 300 & 500 \\
+		10\,000 & 100 & 200 & 300 & 500 \\
+		\hline
+	\end{tabular}
+\end{table}
+
+\subsection{Gemessene Metriken und Hypothesenzuordnung}
+\label{ss:scenario-metrics}
+
+In jedem Szenario werden fünf Metriken bestimmt, die den vier Hypothesen aus \cref{ss:hypotheses} zugeordnet sind:
+
+\begin{itemize}
+	\item \textbf{INP (Interaction to Next Paint):} Entsprechend der in \cref{ss:inp} definierten Metrik ermittelt INP die Reaktionsfähigkeit der Benutzeroberfläche auf Klicks unter bestehender Tick-Last. Sie prüft H1 (Svelte-INP-Vorteil bei steigender UI-Dichte; bei niedriger Last könnte Reacts Scheduling überwiegen)  und H4 (früherer Tipping Point bei React; mögliche Umkehr bei    
+	extremer Last).
+	\item \textbf{scriptingMsPerTick:} Die auf die Tick-Anzahl normierte Scripting-Zeit aus dem CDP-Performance-Trace (\cref{ss:profiling-categories}), d.\,h. die durchschnittliche JavaScript-Ausführungszeit pro Datenänderung. Sie prüft H2 (stärkeres Wachstum des Scripting-Aufwands bei React gegenüber Svelte bei steigendem~$n$).
+	\item \textbf{renderingMsPerTick:} Ebenfalls normierte Rendering-Zeit aus demselben CDP-Trace. Zusammen mit \textit{scriptingMsPerTick} ermöglicht sie eine vollständige Bewertung der Main-Thread-Auslastung und ergänzt H2 um die in \cref{sss:reflow-repaint-composite} beschriebenen Layout- und Style-Recalculation-Kosten. 
+	\item \textbf{JS-Heap-Delta ($\Delta_{\mathrm{Heap}}$):} Differenz des \textit{JSHeapUsedSize} zwischen Ausgangszustand (nach initialem Grid-Render und erzwungener GC) und Endzustand (nach allen Ticks, erneut nach erzwungener GC). Sie prüft H3 (höherer Speicherverbrauch bei React) und macht die in \cref{ss:memory-efficiency} beschriebenen Unterschiede der Heap-Allokation messbar.
+    \item \textbf{Long Tasks (\textit{longTaskCount}, \textit{longTaskMs}):} Anzahl und Gesamtdauer von Main-Thread-Aufgaben, die die W3C-Schwelle von \qty{50}{ms} überschreiten (\cref{sss:frame-budget}). Long Tasks bilden den Tipping Point unmittelbar ab, da jede Grenzüberschreitung eine messbare Blockierung des Main Threads darstellt. Diese Kennzahl dient daher als wichtigste empirische Grundlage für H4 (früherer Tipping Point bei React). Eine Division durch die Tick-Anzahl entfällt im Unterschied zu \textit{scriptingMsPerTick}, da es sich um einzelne Ereignisse handelt. Der absolute Wert pro Messdurchlauf ist daher aussagekräftiger (\cref{sss:long-task-measurement}).
+\end{itemize}
+
+
+% ─────────────────────────────────────────────
+\section{Testumgebung und Standardisierung}
+\label{s:test-environment}
+% ─────────────────────────────────────────────
+
+Für reproduzierbare Messungen muss die Testumgebung vollständig definiert und über alle Durchläufe hinweg unverändert bleiben. Allmähliche Änderungen bei Hardwareauslastung, Softwareeinstellungen oder Versionsständen von Abhängigkeiten stellen verdeckte Fehlerquellen dar und führen zu Leistungsabweichungen, die nicht auf die Frameworks zurückgehen.
+
+\subsection{Hardware-Spezifikation}
+\label{ss:hardware}
+
+Alle Messungen werden auf derselben Workstation vorgenommen. Tabelle \ref{tab:hardware} fasst die relevanten Hardwarekomponenten zusammen. Da das Experiment ausschließlich die Auslastung des Main-Threads durch Scripting und Layout betrachtet (\cref{ss:profiling-categories}), bleibt die GPU-Leistung für die relevanten Messgrößen ohne Bedeutung. Die Phasen Paint und Compositing werden in den Hypothesen H1–H4 nicht berücksichtigt (\cref{ss:hypotheses}).
+\begin{table}[htbp]
+	\centering
+	\caption[Hardware-Spezifikation der Messmaschine]{Hardwarekomponenten der für alle Benchmark-Läufe verwendeten Messmaschine.}
+	\label{tab:hardware}
+	\begin{tabular}{ll}
+		\hline
+		Komponente       & Spezifikation \\
+		\hline
+		CPU              & Intel Core i9-9900K (8 Kerne / 16 Threads, \\ 
+                         & Single-Core-Boost \qty{5,0}{GHz}, All-Core-Boost \qty{4,7}{GHz}) \\   
+		RAM              & \qty{64}{GB} DDR4-3200 \\
+		GPU              & Intel UHD Graphics 630 (integriert) \\
+		Betriebssystem   & Windows 11 Education \\
+		\hline
+	\end{tabular}
+\end{table}
+
+\subsection{Software-Versionierung und Build-Konfiguration}
+\label{ss:software-versions}
+
+\Cref{tab:software-versions} listet die zentralen Versionen auf. In \texttt{package.json} sind ausschließlich exakte Versionsnummern definiert (kein \texttt{\textasciicircum{}}, \texttt{\textasciitilde{}} oder \texttt{latest}). Installationen erfolgen ausschließlich über \texttt{npm ci} unter Verwendung des im Repository hinterlegten Lockfiles.
+\begin{table}[H]
+	\centering
+	\caption[Fixierte Software-Versionen der Benchmark-Toolchain]{Software-Versionen aller experimentrelevanten Abhängigkeiten. Exakte Versionspins verhindern unbemerkte Änderungen an Abhängigkeiten zwischen einzelnen Messläufen.}
+	\label{tab:software-versions}
+	\begin{tabular}{ll>{\raggedright\arraybackslash}p{4.5cm}}
+		\hline
+		Komponente & Version & Rolle im Experiment \\
+		\hline
+		React                                    & 19.2.6   & Primäres Framework (VDOM + Compiler) \\
+		\texttt{babel-plugin-react-compiler}     & 1.0.0    & Automatisierte Memoisierung im Build \\
+		\texttt{@vitejs/plugin-react}            & 6.0.2    & Babel-Integration in die Vite-Pipeline (React Compiler) \\ 
+        Svelte                                   & 5.55.7   & Primäres Framework (Signals, Runes) \\
+		\texttt{@sveltejs/vite-plugin-svelte}    & 7.1.2    & Svelte-Kompilierungspipeline in Vite \\
+        Vite                                     & 8.0.13   & Build-Tool und Preview-Server \\
+		TypeScript (react-app, svelte-app)       & 6.0.3    & Statische Typisierung beider Apps \\
+        TypeScript (shared-logic)                & 5.9.3    & Kompilierung der MockEngine \\
+		Playwright                               & 1.52.0   & Teststeuerung und Zugriff auf das CDP \\
+		Chromium                                 & via Playwright & Rendering-Engine \\
+		\hline
+	\end{tabular}
+\end{table}
+
+\subsubsection{Vite-Production-Build als Messvoraussetzung}
+\label{sss:production-build}
+
+Alle automatisierten Messungen basieren ausschließlich auf einem Vite-Production-Build, da im Development-Modus zentrale Optimierungen wie die Minifizierung fehlen \cite{vite-why} und der aktive \textit{StrictMode} Komponenten doppelt rendert sowie bestimmte Hooks mehrfach ausführt \cite{react_strictmode}. Einzige Ausnahme ist die einmalige qualitative Heap-Snapshot-Analyse (\cref{sss:qualitative-heap}), die bewusst im Development-Build durchgeführt wird, um unminifizierte Konstruktornamen für die manuelle Analyse der Dominator-Struktur zu erhalten. Der React Compiler ist als Babel-Plugin Teil der Build-Pipeline und übernimmt die Optimierung des Komponentencodes während des Build-Vorgangs (\cref{ss:react-compiler}). Vor jedem Messlauf werden die Production-Builds beider Frameworks neu erzeugt und anschließend über \texttt{vite preview} als lokale statische Server bereitgestellt. Playwright greift ausschließlich auf diese optimierten Bundles zu. 
+
+\subsubsection{Bare-Metal-Ausführung}
+\label{sss:bare-metal}
+
+Das Experiment läuft nativ auf dem Host-Betriebssystem und verzichtet auf zusätzliche Virtualisierungsschichten wie Docker Desktop unter Windows. Diese Entscheidung basiert auf dem in der Literatur belegten signifikanten Overhead sowie erhöhten Schwankungen bei Zeitmessungen, die durch solche Abstraktionsschichten entstehen \cite{kirova-virtualization-2019}. Im Kontext dieser Untersuchung wirkt sich dies insbesondere in zwei Bereichen kritisch aus:
+\begin{enumerate}
+	\item \textbf{CPU-seitige Timer:} Die Virtualisierung beeinträchtigt die Stabilität des hier eingesetzten Web-Worker-Timers (\cref{sss:lifecycle}), da der Hypervisor-seitige Software-Overhead die Genauigkeit virtueller Zeitmessungs-Operationen negativ beeinflussen kann \cite{kirova-virtualization-2019}.
+    \item \textbf{CPU-Scheduling und Jitter:} Hypervisoren weisen physische CPU-Ressourcen dynamisch verschiedenen virtuellen Instanzen zu. Dadurch entstehen unvorhersehbare Kontextwechsel und zeitliche Überlagerungen, die sich direkt als Jitter in der Programmausführung äußern. Besonders bei zeitkritischen Messungen verursachen diese Scheduling-Effekte zusätzliche Latenzschwankungen und erschweren somit die exakte Bestimmung der \textbf{reinen Framework-Performance unter Last} \cite{kirova-virtualization-2019}.
+\end{enumerate}
+
+\subsubsection{Minimierung von OS-Interferenzen}
+\label{sss:os-interference}
+
+Zur Minimierung störender Hintergrundaktivitäten des Betriebssystems werden vor jedem Messlauf die folgenden Vorkehrungen getroffen:
+
+\begin{itemize}
+	\item Schließen aller nicht-essenziellen Anwendungen und Browser-Tabs
+	\item Deaktivierung automatischer System-Updates für die Dauer des Messlaufs
+	\item Durchführung des Benchmarks ohne aktive Netzwerkverbindungen (beide Anwendungen laufen als lokale statische Server)
+	\item Einhaltung einer ausreichenden Aufwärmphase nach dem Systemstart, damit Hintergrunddienste einen stabilen Ruhezustand erreichen
+    \item Umstellung des Windows-Energiesparplans auf \textit{Höchstleistung}, um dynamisches CPU-Frequenzscaling während der Messung zu verhindern \cite{microsoft-windowsserver-powerplan-2026}
+\end{itemize}
+Trotz der getroffenen Maßnahmen lässt sich Thermal Throttling nicht vollständig ausschließen. Die temperaturbedingte Verringerung der CPU-Taktfrequenz erhöht die Streuung der Messergebnisse (IQR) über die zehn Messwiederholungen, verändert jedoch die Rangfolge der Frameworks nicht systematisch. Der Einsatz von Median und IQR als robuste Lage- und Streuungsmaße (\cref{ss:statistical-evaluation}) reduziert die Auswirkungen dieser Schwankungen auf die Auswertung.
+% ─────────────────────────────────────────────
+\section{Automatisierung und statistische Methodik}
+\label{s:automation-and-statistics}
+% ─────────────────────────────────────────────
+
+\subsection{Teststeuerung mittels Playwright und CDP-Trace-Analyse}
+\label{ss:test-orchestration}
+
+Die vollständige Testmatrix läuft automatisiert über das Playwright-Testframework. Playwright erfüllt dabei drei wesentliche Aufgaben: Es steuert den Chromium-Browser, synchronisiert sich mit dem Benchmark-Ablauf der Anwendungen und greift über das Chrome DevTools Protocol (CDP) auf Performance-Daten zu.
+
+\subsubsection{Browser-Konfiguration}
+\label{sss:browser-config}
+
+Playwright startet Chromium im Headless-Modus (\texttt{headless: true}, das ab Playwright~1.35 für Chromium automatisch den \texttt{--headless=new}-Codepfad aktiviert) mit einem festen Viewport von $1280 \times 720$ Pixeln. Dieser Modus verwendet denselben Codepfad wie der reguläre Chrome-Browser, sodass die gesamte Rendering-Pipeline und die DevTools uneingeschränkt zur Verfügung stehen \cite{chrome-headless-new-2024} und eine realitätsnahe Messung der in \cref{ss:profiling-categories} definierten Profiling-Kategorien ermöglichen. Die feste Viewport-Größe sorgt dafür, dass layoutabhängige Größen wie die Zellanzahl pro Zeile konstant bleiben und die Klickzielposition für den INP-Trigger unabhängig von~$n$ stabil ist (\cref{sss:inp-trigger}). Ein einzelner Playwright-Worker stellt sicher, dass keine parallelen Browser-Instanzen ausgeführt werden, die sich CPU-Ressourcen teilen und die Messung gegenseitig beeinflussen würden.
+
+\subsubsection{Benchmark-Ablauf und Synchronisation}
+\label{sss:lifecycle}
+
+Beide Testanwendungen implementieren einen kontrollierten Benchmark-Ablauf, der präzise Messungen ohne fest vorgegebene Wartezeiten (\texttt{sleep}-Kommandos) ermöglicht. Der Ablauf trennt eine Initialisierungsphase, in der das Grid vollständig gerendert und der Web Worker vorbereitet werden, von der eigentlichen Messphase, in der die Ausführung des Tick-Loops erfolgt. Diese Trennung stellt sicher, dass die Erfassung ausschließlich die Rendering-Arbeit des Tick-Loops umfasst und das initiale Laden des JavaScript-Bundles sowie das erste Grid-Rendering ausschließt. Playwright startet den Tick-Loop erst nach einer optionalen Baseline-Heap-Messung, sodass diese in einem stabilen, ruhenden Ausgangszustand erfolgt. Die technische Umsetzung der Synchronisation zwischen Playwright und Testanwendung wird in \cref{ss:impl-performance-spec} erläutert.
+
+\subsubsection{CDP-Trace-Analyse für Scripting- und Rendering-Zeit}
+\label{sss:cdp-trace}
+
+Für die Scripting- und Rendering-Metrik zeichnet die CDP-Schnittstelle einen Performance-Trace auf \cite{chrome-devtools-tracing}. Dieser umfasst exakt die Messphase des Tick-Loops. Die aufgezeichneten Ereignisse werden gemäß \cref{ss:profiling-categories} den Scripting- und Rendering-Kategorien zugeordnet und getrennt aufsummiert \cite{kearney-timeline-2015}. Nach der Normierung der resultierenden Millisekundensummen auf die Tick-Anzahl ergeben sich die szenariounabhängigen Größen \textit{scriptingMsPerTick} und \textit{renderingMsPerTick} (\cref{ss:normalization}). Details zur CDP-Trace-API finden sich in \cref{ss:cdp-helpers}.
+
+\subsubsection{Long-Task-Messung via PerformanceObserver}
+\label{sss:long-task-measurement}
+
+Parallel zum CDP-Trace erfasst ein \textit{PerformanceObserver} Long Tasks (\cref{sss:frame-budget}). Um Long Tasks der initialen Renderphase (Seitenaufbau, erstes Grid-Layout) auszuschließen, wird dieser erst \qty{100}{ms} nach dem vollständigen Rendern des Grids aktiviert. In die Messung fließen damit ausschließlich Long Tasks des folgenden Tick-Loops ein. Je Wiederholung werden zwei Metriken erhoben: \textit{longTaskCount} (Ereignisse über der \qty{50}{ms}-Schwelle) und \textit{longTaskMs} (Gesamtdauer in Millisekunden). Um sicherzustellen, dass der letzte Long Task eines Durchlaufs nicht verloren geht, werden unmittelbar nach Abschluss des Tick-Loops noch verbleibende Einträge gesichert, bevor der \textit{PerformanceObserver} getrennt wird. Die Auswertung basiert auf Median und IQR über alle Wiederholungen (\cref{ss:statistical-evaluation}). Die Implementierung ist in \cref{sss:impl-longtasks} beschrieben.
+
+\subsubsection{INP-Messung und Klick-Trigger}
+\label{sss:inp-trigger}
+
+Die Messung von INP erfolgt im JavaScript-Kontext der Testanwendung mithilfe eines \textit{PerformanceObserver}, der Interaktionsereignisse ab dem browserseitigen Mindestschwellenwert von \qty{16}{ms} erfasst \cite{mocny-event-timing-2026}. Pro Interaktion werden die drei INP-Phasen Input Delay, Processing Time und Presentation Delay (\cref{ss:inp}) bestimmt. Für eine praxisnahe Messung löst Playwright alle \qty{100}{ms} einen synthetischen Mausklick aus. Diese Frequenz führt bei starker Auslastung des Main Threads zu einem Rückstau verzögerter Eingaben (delayed inputs) und bildet damit das Verhalten ungeduldiger Nutzer auf blockierten Benutzeroberflächen realistisch nach \cite{web.dev_inp_2025, mdn_mthread_2025}. So lassen sich selbst extreme Interaktionslatenzen zuverlässig erfassen. Der Klick-Loop umgeht bewusst die Standard-Playwright-Klick-API. Deren automatische Actionability-Prüfungen \cite{playwright-autowaiting} können bei hoher Tick-Frequenz Timeouts auslösen, sodass ausgerechnet die kritischsten Blockierungen nicht in die Messung eingehen würden. Stattdessen werden Klicks direkt und unabhängig vom Zustand des JavaScript-Threads übermittelt. Der Klick-Loop startet vor dem Beginn des Tick-Loops, damit bereits beim ersten Tick Klick-Ereignisse eintreffen. Die pro Wiederholung gesammelten INP-Einträge werden über alle $N = 10$ Wiederholungen zusammengeführt und gemeinsam ausgewertet. Die abschließende Berechnung folgt der W3C-Spezifikation \cite{web.dev_inp_2025, mocny-event-timing-2026}: Entscheidend ist die maximale Interaktionsdauer, wobei je 50 Einträge ein Ausreißer unberücksichtigt bleibt. Die technische Umsetzung ist in \cref{sss:impl-inp-observer} dargestellt.
+
+\subsection{Messwiederholungen und Warmup-Lauf}
+\label{ss:statistical-methodology}
+
+Die Anzahl von  $N = 10$  Wiederholungen je Szenario wurde gewählt, um einen praktikablen Mittelweg zwischen statistischer Aussagekraft und Rechenzeit zu erreichen. Bereits bei 64 Szenarien ergibt sich eine geschätzte Gesamtlaufzeit von sieben bis acht Stunden (vgl. \cref{ss:test-matrix}). Eine Erhöhung auf $N = 20$ würde den Aufwand auf ca. 15 Stunden steigern. Gleichzeitig sind weniger als zehn Wiederholungen ebenfalls ungeeignet, da der IQR dann nicht sinnvoll interpretierbar ist. Bei $N = 5$ würde beispielsweise jedes Quartil nur auf einem einzelnen Messwert beruhen, sodass ein Ausreißer Q1 oder Q3 vollständig bestimmen könnte. Vor den zehn Messungen findet pro Szenario ein \textit{Warmup-Lauf} statt, dessen Resultate verworfen werden. Er dient dazu, den browserseitigen Code-Cache, eine V8-interne Zwischenspeicherung bereits kompilierten Codes, zu befüllen \cite{alle-v8-caching-2018} und die dynamische Just-In-Time-Kompilierung (JIT) häufig genutzter Programmteile in Maschinencode anzustoßen \cite{barrett-warmup-2017}. Für jede Messwiederholung lädt Playwright die Seite neu (\texttt{page.goto}) \cite{playwright-navigations}. Da \texttt{page.goto()} eine neue Navigation startet, wird der JavaScript-Zustand vollständig neu erstellt und Heap-Allokationen aus vorherigen Durchläufen nicht übertragen. V8 ermöglicht die Zwischenspeicherung von generiertem Code direkt im Arbeitsspeicher der jeweiligen Instanz \cite{alle-v8-caching-2018}. Ob dieser Cache über Navigationen hinweg teilweise erhalten bleibt, ist ohne V8-interne Profiling-Daten nicht nachweisbar. Da jedoch alle Wiederholungen denselben Ablauf aus Navigation und Benchmark-Ausführung durchlaufen, bleibt die Vergleichbarkeit der Messungen gewährleistet.
+
+\subsection{Statistische Auswertung: Median und IQR}
+\label{ss:statistical-evaluation}
+
+Für jedes Szenario dient der Median als zentraler Wert. Die Streuung lässt sich über den Interquartilsabstand (IQR) beschreiben, der der Differenz zwischen dem 75.\ und dem 25.\ Perzentil entspricht. Beide Kennwerte sind robust gegenüber Ausreißern, wie sie bei Browser-Messungen durch gelegentliche Garbage-Collection-Pausen entstehen können (\cref{sss:gc-interference}). Der Median beschreibt den typischen Leistungswert eines Frameworks unter Last, der IQR hingegen misst die Stabilität: Niedrige Werte deuten auf konstantes Verhalten hin, hohe auf kontinuierliche Leistungsschwankungen. Daraus ergibt sich ein unabhängiges Ergebnis für die Tipping-Point-Analyse (\cref{sss:tipping-point}). Auf die Annahme einer Normalverteilung sowie auf parametrische Kennzahlen wie Mittelwert und Standardabweichung wird bewusst verzichtet. Wie in \cref{sss:gc-interference} gezeigt, können sporadische GC-Ereignisse einzelne Messungen durch mehrere Millisekunden andauernde Blockierungen des Main-Threads erheblich erhöhen. Solche Ausreißer verzerren die Verteilung der Messwerte, wodurch das arithmetische Mittel die typische Leistung eines Frameworks nicht mehr zuverlässig wiedergibt \cite{huber-robust-1981}.
+
+\subsection{Normalisierung der Scripting-Zeit: scriptingMsPerTick}
+\label{ss:normalization}
+
+Ein zentrales methodisches Problem der kombinierten Testmatrix liegt in den unterschiedlich langen Laufzeiten der Szenarien. Die Szenarien der Testmatrix unterscheiden sich nicht nur in~$n$, sondern auch in der Tick-Anzahl: $\Delta t = \qty{100}{ms}$ erzeugt 100~Ticks, $\Delta t = \qty{16}{ms}$ hingegen 500~Ticks pro Durchlauf. Die absolute Scripting-Gesamtzeit \textit{scriptingMs} skaliert direkt mit der Tick-Anzahl und eignet sich daher nicht als Vergleichswert über Frequenzstufen hinweg. Um dieses Problem zu lösen, kommt eine Normalisierung der Scripting-Zeit auf die Anzahl der tatsächlich verarbeiteten Ticks zum Einsatz:
+\begin{equation}
+	\textit{scriptingMsPerTick} \;=\; \frac{\textit{scriptingMs}}{\textit{tickCount}}
+\end{equation}
+Diese Größe beschreibt den durchschnittlichen CPU-Aufwand des Frameworks pro Datenänderung und ist unabhängig von der vorgegebenen oder tatsächlichen Gesamtlaufzeit des Szenarios. Damit lässt sich das Skalierungsverhalten über alle $n$-Stufen hinweg direkt vergleichen, weshalb sie als primäre Vergleichsgröße für Hypothese H2 dient. \textit{renderingMsPerTick} wird nach demselben Prinzip ermittelt.
+
+\subsection{Zweigeteilte Speicheranalyse}
+\label{ss:memory-measurement}
+
+Wie in \cref{ss:memory-efficiency} begründet, nutzt die Speicheranalyse einen zweistufigen Ansatz, der qualitative und quantitative Verfahren kombiniert.
+
+\subsubsection{Qualitative Analyse: Manueller Heap-Snapshot im Development-Build}
+\label{sss:qualitative-heap}
+
+Im ersten Teil findet im \textit{Development-Build} (unminifiziert, mit aussagekräftigen Konstruktornamen) einmalig für beide Frameworks die Erstellung eines manuellen Heap-Snapshots mithilfe der Chrome DevTools statt. Als Grundlage dient ein kleines Grid mit 100 Zellen, das die Dominator-Struktur übersichtlich darstellt (\cref{ss:memory-efficiency}). Der Snapshot zeigt die interne Fiber-Baumstruktur von React, insbesondere \texttt{FiberNode}-Instanzen und deren Retained Size (\cref{ss:fiber-engine}), und ermöglicht einen qualitativen Vergleich mit dem signalbasierten Speichermodell von Svelte 5 (\cref{sss:runes-overhead}). Im Production-Build ersetzt die Minifizierung Konstruktornamen durch nichtssagende Kürzel (z.B. FiberNode → t). Dadurch verliert der Heap seine semantische Struktur, was eine automatisierte Identifikation von Framework-Komponenten unmöglich macht. Zudem können Heap-Snapshots bei $n = 10\,000$ mehrere hundert Megabyte umfassen und sind für automatisierte Läufe unpraktisch. Der qualitative Snapshot bleibt daher ein einmaliger, manueller Schritt.
+
+\subsubsection{Quantitative Analyse: JS-Heap-Delta via CDP im Production-Build}
+\label{sss:quantitative-heap}
+
+Im zweiten Teil erfolgt die automatisierte Ermittlung der Speicherverbrauchs-Skalierung über alle Dichtestufen. Vor der Baseline-Messung werden drei erzwungene Garbage-Collection-Zyklen ausgeführt, um temporäre Heap-Allokationen aus der Initialisierungsphase zu beseitigen. Dies ist notwendig, da V8 den Heap in mehrere Generationen aufteilt und ein einzelner Zyklus nicht zwingend alle davon abdeckt \cite{v8.dev_fiber-2019}. Zwischen den Zyklen liegt jeweils eine kurze Pause, die sicherstellt, dass der laufende Zyklus vollständig abgeschlossen ist, bevor der nächste einsetzt. Nach Abschluss aller Ticks wird dieselbe GC-Sequenz wiederholt und der finale Heap-Wert gemessen. Das Heap-Delta
+\begin{equation}
+	\Delta_{\mathrm{Heap}} \;=\; \textit{JSHeapUsedSize}_{\mathrm{final}} \;-\; \textit{JSHeapUsedSize}_{\mathrm{baseline}}
+\end{equation}
+beschreibt den nach der Garbage Collection verbleibenden Speicherzuwachs durch den Tick-Loop und dient damit als reproduzierbare Kenngröße für den Speicherbedarf unter Dauerlast. Alle drei Messdurchläufe — Performance, Speicher und INP — laufen in jeweils separaten Playwright-Projekten, um gegenseitige Einflüsse zu vermeiden. \texttt{performance.spec.ts} und \texttt{memory.spec.ts} dürfen nicht gleichzeitig aktiv sein, da die CDP-Kategorien \texttt{Tracing} und \texttt{HeapProfiler} sowohl Messwerte als auch den entstehenden Overhead verfälschen können \cite{chromium-heap-profiling}. \texttt{inp.spec.ts} ist aus inhaltlichen Gründen isoliert: Der aktive Click-Loop erzeugt \texttt{EventDispatch}-Ereignisse, die in einen parallel laufenden CDP-Trace als Scripting-Zeit einfließen und \textit{scriptingMsPerTick} beeinflussen würden. Im Kontext der Speichermessung können die synthetischen Klicks zudem das GC-Verhalten verändern und damit $\Delta_{\mathrm{Heap}}$ verzerren (vgl.~\cref{sss:gc-interference}). Die technische Umsetzung ist in \cref{s:impl-benchmark} beschrieben.
+
+% ─────────────────────────────────────────────
+\section{Validität und Gütekriterien}
+\label{s:validity}
+% ─────────────────────────────────────────────
+
+\subsection{Interne Validität: Sicherstellung identischer Logik in beiden Implementierungen}
+\label{ss:internal-validity}
+
+Für die interne Validität eines Framework-Vergleichs ist ausschlaggebend, ob beobachtete Leistungsunterschiede tatsächlich auf die Frameworks zurückzuführen sind oder durch unbeabsichtigte Unterschiede in der Implementierung entstehen. Um dies zu gewährleisten, wurden Maßnahmen auf vier Ebenen definiert.
+
+\subsubsection{Identische Eingabedaten durch eine framework-unabhängige MockEngine}
+\label{sss:mock-engine-validity}
+
+Zur Sicherstellung identischer Testbedingungen dient die \texttt{MockEngine} im gemeinsamen Paket \texttt{@benchmark/shared-logic}. Sie erzeugt aus denselben Eingabeparametern (Grid-Größe, Tick-Anzahl, Mutationsrate, Seed) für beide Frameworks einen identischen \texttt{TestPlan}: gleiche Anfangszustände aller Zellen, identische Mutationsfolgen je Tick sowie konsistente Zell-IDs für jede Veränderung. Grundlage ist der deterministische Pseudozufallszahlengenerator Mulberry32 \cite{ettinger-mulberry32-2017}, dessen fester Seed sicherstellt, dass beide Frameworks in jedem Szenario exakt dieselbe Renderarbeit ausführen. Da der \texttt{TestPlan} einmalig vor dem ersten Renderdurchlauf berechnet wird und danach unveränderlich bleibt, geht dieser Aufwand nicht in die gemessenen Metriken ein. Die Implementierung ist in \cref{ss:impl-mockengine} beschrieben.     
+
+\subsubsection{Strukturelle Vergleichbarkeit der Implementierungen}
+\label{sss:parity}
+
+Beide Framework-Implementierungen sind nach denselben architektonischen Prinzipien aufgebaut, die direkt aus den Anforderungen der internen Validität hervorgehen:
+
+\begin{itemize}
+	\item \textbf{Prop-Drilling:} Der Zustand des Grids liegt vollständig in der Wurzelkomponente. Primitive Daten (\texttt{value} als Integer) werden per Props weitergereicht. Zusätzliche Mechanismen wie State-Management-Frameworks, Context-API oder Svelte-Stores kommen nicht zum Einsatz. Dadurch sind die Update-Pfade in beiden Frameworks strukturell vergleichbar und enthalten keine zusätzlichen Zwischenschichten.
+	\item \textbf{Identische Zellstruktur:} Jede Zelle hat eine feste Größe von $30 \times 30$ Pixeln. Die festen Maße vermeiden dynamische Layoutberechnungen (vgl. \cref{sss:reflow-repaint-composite}), die die Rendering-Metrik frameworkunabhängig erhöhen würden.
+	\item \textbf{Stabile Keys:} Für die Iteration nutzen beide Frameworks die stabile Zell-ID (\texttt{item.id}) und nicht den Array-Index. Instabile Keys führen in React zu unnötigen DOM-Unmount- und Remount-Vorgängen \cite{react-rendering-lists} und verfälschen damit die Messergebnisse.
+	\item \textbf{Bailout-Guard:} Der Datengenerator stellt sicher, dass jede Mutation eine tatsächliche Wertänderung bewirkt. Ohne diese Sicherstellung könnten identische Werte dazu führen, dass Framework-Optimierungen, wie die reaktiven Updates bei Svelte-Runen oder die automatische Memoization des React Compilers, keine Änderung feststellen und daher keine Aktualisierung ausführen \cite{react_compiler_2025, svelte_runes_2023}. Dies hätte zur Folge, dass weniger Renderaufwand entsteht als beabsichtigt, wodurch es zu einem unbemerkten Messfehler kommt.
+	  \item \textbf{Identischer Web-Worker-Timer:} eine inhaltlich identische
+    \texttt{ticker.worker.ts} mit drift-korrigiertem \texttt{setTimeout} (\cref{ss:impl-worker}). Dadurch ist die Tick-Frequenz für beide Frameworks identisch und bleibt unabhängig von der jeweiligen Rendering-Auslastung des Main-Threads (vgl. \cref{sss:disturbances}).
+\end{itemize}
+Der einzige bewusst gewählte strukturelle Unterschied zwischen den Implementierungen ist methodisch erforderlich: 
+React benötigt für die Änderungserkennung im Diffing-Prozess eine neue Objektreferenz (vgl.~\cref{ss:vdom} und \cite{react-memo, react_reconcillation_2024}), während Svelte 5 durch sein Signal-System feingranulare Änderungen direkt am bestehenden Objekt identifiziert (vgl.~\cref{sss:finegraned-reactivity} und \cite{svelte_runes_2023, svelte_fine-grained_reactivity-2023}).  Dabei handelt es sich nicht um einen Implementierungsfehler, sondern um ein grundlegendes Merkmal der jeweiligen Reaktivitätsmodelle, dessen Einfluss auf Speicherverbrauch und CPU-Last in dieser Arbeit empirisch untersucht wird.
+
+\subsubsection{Verbotene Optimierungen}
+\label{sss:forbidden-optimizations}
+
+In der React-Implementierung bleibt der Einsatz von \texttt{React.memo}, \texttt{useMemo} und \texttt{useCallback} bewusst aus, um die architektonischen Eigenschaften beider Frameworks im Ausgangszustand vergleichbar zu machen. Manuelle Optimierungen würden die systembedingten Unterschiede zwischen Reacts VDOM-basiertem Laufzeitmodell und Sveltes compilerbasiertem Ansatz reduzieren und somit die empirische Vergleichbarkeit beeinträchtigen. Darüber hinaus kann der React Compiler seine automatische Memoisierung unbeeinflusst anwenden (\cref{sss:react-compiler}). In der Svelte-Implementierung werden ausschließlich Svelte-5-Runes (\texttt{\$state}, \texttt{\$derived}, \texttt{\$props}) verwendet. Svelte-4-Syntax (\texttt{export let}, reaktive Statements \texttt{\$:}, Svelte Stores) ist vollständig ausgeschlossen (\cref{ss:svelte-reactivity}).
+
+\subsection{Externe Validität: Übertragbarkeit auf reale Anwendungen}
+\label{ss:external-validity}
+
+\subsubsection{Übertragbarkeit des Testszenarios}
+\label{sss:transferability}
+
+Das Test-Szenario einer dynamischen Heatmap-Matrix mit hochfrequenten Datenänderungen spiegelt zentrale Anforderungen moderner datenintensiver Webanwendungen wider. Dies gilt insbesondere für Echtzeit-Dashboards (z.\,B. Monitoring-Systeme) und interaktive Visualisierungen, bei denen kontinuierliche Datenströme Teile der Benutzeroberfläche mit hoher Frequenz aktualisieren \cite{furrer-livedashboard-2018}. Die gewählten Parameter $n \in \{100,\;400,\;900,\;1600,\;4000,\;6000,\;8000,\;10\,000\}$ und $\Delta t \in \{100,\;50,\;33,\;16\}$\,ms decken diesen Lastbereich systematisch ab und schließen den Abschnitt ein, in dem die in \cref{sss:tipping-point} bestimmte Sättigungsgrenze erreicht wird.               
+
+\subsubsection{Grenzen der externen Validität}
+\label{sss:external-validity-limits}
+
+Gleichzeitig ist das Testszenario bewusst vereinfacht, um eine hohe Kontrollierbarkeit und präzise Messungen zu ermöglichen. Einige Aspekte realer Anwendungen werden jedoch nicht abgebildet:
+
+\begin{itemize}
+	\item \textbf{Komponentenvielfalt:} Reale Anwendungen bestehen häufig aus unterschiedlich aufgebauten Komponentenbäumen mit stark variierendem Rendering-Aufwand, wodurch die gemessenen Skalierungskurven davon abweichen könnten.
+	\item \textbf{Netzwerklatenz:} Die Datenänderungen basieren auf einem lokal vorab berechneten Testplan und nicht auf tatsächlich über das Netzwerk empfangenen Daten. Schwankungen der Tick-Rate, die durch Netzwerkeinflüsse entstehen, sind somit vollständig ausgeschlossen. Dies erhöht zwar die Kontrollierbarkeit, schränkt jedoch die Übertragbarkeit auf Szenarien mit unregelmäßigem Dateneingang ein.
+	\item \textbf{Routing und Code-Splitting:} Einflüsse der Navigation auf Bundle-Ladezeiten und Hydrationsprozesse in größeren Anwendungen bleiben in diesem Experiment unberücksichtigt.
+	\item \textbf{Komplexe Interaktionsprozesse:} Die INP-Messung basiert auf synthetischen Klick-Ereignissen. Komplexere Interaktionen (Formulareingaben, Drag-and-Drop, Tastatursteuerung) können andere INP-Verläufe zeigen, da sich Art und Dauer der Event-Handler-Callbacks unterscheiden.
+\end{itemize}
+Die Ergebnisse dieser Arbeit gelten in erster Linie für \emph{datenintensive, hochfrequent aktualisierte} Systeme. Für überwiegend statische Anwendungen mit seltenen Datenmutationen, beispielsweise klassische Content-Management-Systeme oder Formularanwendungen, sind die Schlussfolgerungen nur begrenzt relevant, da dort die in \cref{ss:abstraction-costs} beschriebenen Abstraktionskosten kaum Einfluss auf die Skalierung haben.
+
+\subsection{Messgenauigkeit und Störfaktoren}
+\label{ss:measurement-accuracy}
+
+\subsubsection{Garbage Collection}
+\label{sss:gc-interference}
+
+Garbage-Collection-Pausen der V8-Engine stellen den wichtigsten zufälligen Störfaktor bei Browser-Performance-Messungen dar. Insbesondere Major-GC-Ereignisse können den Main Thread für mehrere Millisekunden blockieren und so in einzelnen Durchläufen deutlich erhöhte Scripting-Werte verursachen \cite{v8.dev_fiber-2019}. Für die Heap-Messung (\cref{sss:quantitative-heap}) wird dieser Einfluss durch eine dreifach erzwungene Garbage Collection vor jeder Baseline- und Endmessung kontrolliert. Da V8 Speicherobjekte in mehrere Generationen aufteilt, deckt ein einzelner erzwungener GC-Lauf nicht zwingend alle davon ab \cite{v8.dev_fiber-2019}. Mehrere aufeinanderfolgende Zyklen mit kurzen Pausen dazwischen stellen sicher, dass der Heap einen stabilen Ausgangszustand erreicht (vgl.~\cref{ss:impl-memory-spec}). Für die Scripting-Messung via CDP-Trace kann GC-Overhead nicht aktiv ausgeschlossen werden, da eine erzwungene GC im Tick-Loop die gemessene Frameworklast verfälschen würde. Entstehende Ausreißer werden stattdessen durch robuste statistische Maße wie Median und IQR kontrolliert (\cref{ss:statistical-evaluation}).
+
+\subsubsection{JIT-Optimierungen}
+\label{sss:jit-interference}
+
+V8 durchläuft bei der Ausführung mehrere Optimierungsstufen für häufig genutzte Codepfade, beginnend bei der Interpretation bis zur Erzeugung von Maschinencode \cite{v8.dev_fiber-2019}. Ohne entsprechende Maßnahmen würden frühe Messungen zusätzlich die Kosten dieser JIT-Kompilierung enthalten und daher höhere Scripting-Zeiten aufweisen als spätere Durchläufe. Der in \cref{ss:statistical-methodology} beschriebene Warmup-Lauf begrenzt diesen Einfluss; die verbleibenden Grenzen des Ansatzes sind dort erläutert. Darüber hinaus passen JIT-Compiler den Optimierungsgrad während der Laufzeit an, indem sie häufig genutzte Methoden auf Basis von Profilinformationen erneut und aggressiver kompilieren \cite{ibm-jit-compiler-2024}; dieser Effekt tritt innerhalb eines Messlaufs auf und wird durch den Warmup-Lauf nicht kontrolliert.
+
+\subsubsection{Browser-interne Interferenzen und Gesamtbewertung}
+\label{sss:disturbances}
+
+Neben GC und JIT können weitere Browser-interne Prozesse die Messung beeinflussen:
+
+\begin{itemize}
+	\item \textbf{Hintergrundprozesse des Browsers:} Chromium führt intern speicherverwaltende und diagnostische Hintergrundaufgaben aus. Die Verwendung eines sauberen, neu gestarteten Profils ohne Erweiterungen und ohne Netzwerkanbindung minimiert äußere Einflüsse deutlich.
+	\item \textbf{Timer-Ungenauigkeit des Main-Threads:} Der HTML-Standard garantiert keine exakte Ausführung von Timern und berücksichtigt Verzögerungen durch CPU-Last sowie konkurrierende Aufgaben. Deshalb reagiert \texttt{setInterval} im Main-Thread unter hoher Auslastung unzuverlässig. Ein Web-Worker-Timer (\cref{sss:lifecycle}) ist davon entkoppelt, da Worker in einem separaten Agenten mit eigener Event-Loop laufen und unabhängig von UI-Skripten arbeiten \cite{whatwg-html-2026}.
+	\item \textbf{Thermal Throttling:} Anhaltende CPU-Volllast kann zu einer temporären Reduktion des Takts führen. Dieser Effekt lässt sich im vorliegenden Versuchsaufbau nicht vollständig vermeiden (vgl. \cref{sss:os-interference}). 
+\end{itemize}
+Die beschriebenen Maßnahmen stellen sicher, dass die Messungen unter möglichst konstanten Bedingungen durchgeführt werden und die Vergleichbarkeit der Ergebnisse gewährleistet ist. Verbleibende externe Einflüsse können zwar nicht vollständig ausgeschlossen werden, ihr Einfluss auf die Auswertung wird jedoch minimiert und bei der Interpretation der Ergebnisse als Limitation berücksichtigt.

@@ -1,0 +1,54 @@
+\chapter{Stand der Forschung}
+\label{ch:state-of-the-art}
+
+Dieses Kapitel gibt einen Überblick über den aktuellen Forschungsstand und baut auf den theoretischen Skalierungsmodellen aus \cref{s:theoretical-models-and-hypotheses} auf.
+
+\section{Existierende Framework-Benchmarks}
+\label{s:existing-benchmarks}
+
+Als Referenz für die Leistungsfähigkeit unter kontrollierten Bedingungen dient der \textit{js-framework-benchmark} von Stefan Krause \cite{krause-benchmark-2026}.
+
+\subsection{Methodik synthetischer Benchmarks}
+Der Benchmark misst die Performance verschiedener JavaScript-Frameworks, indem er die Ausführungs- und Rendering-Zeiten gängiger Operationen in großen, zufällig erzeugten Datentabellen erfasst. Die relevanten Daten beziehen sich auf den \textit{Keyed-Modus}, bei dem eindeutige Identifikatoren eine präzise Zuordnung von Datenänderungen zu DOM-Elementen ermöglichen (\cref{ss:vdom}). Die Ermittlung der Gesamtperformance erfolgt auf Basis des gewichteten geometrischen Mittels \cite{krause-benchmark-2026}.
+
+
+\subsection{Empirische Performance-Profile: React 19 und Svelte 5}
+Die Ergebnisse zeigen deutliche Unterschiede zwischen Svelte (v5.42.1) und den React-Varianten (React v19.2.0 und React Compiler v19.0.0).
+
+\subsubsection{Ausführungszeit (Duration)}
+Beim initialen Erstellen von 1.000 Zeilen liegt Svelte mit \qty{21,8}{ms} nur leicht vor React (ca. \qty{24,0}{ms}) \cite{krause-benchmark-2026}. Bei komplexeren Änderungen vergrößert sich der Abstand: Das Vertauschen zweier Zeilen erfordert bei Svelte \qty{12,8}{ms}, während React hierfür \qty{88,8}{ms} bis \qty{89,9}{ms} benötigt. Auch bei der Skalierung auf 10.000 Zeilen bleibt Svelte mit \qty{236,6}{ms} effizienter als React (\qty{411,1}{ms} bis \qty{447,6}{ms}) \cite{krause-benchmark-2026}. Im gewichteten geometrischen Mittel der Duration-Faktoren erreicht Svelte einen Wert von 1,15, während React zwischen 1,53 und 1,59 liegt \cite{krause-benchmark-2026}. Die geringen Unterschiede zwischen den React-Varianten über alle Metriken hinweg zeigen zudem, dass der React Compiler gegenüber einer manuellen Hook-Implementierung keinen messbaren Laufzeitvorteil erzielt. Dies bestätigt empirisch den in \cref{sss:potentials-and-limitations} hergeleiteten Befund, dass die grundlegenden VDOM-Kosten trotz automatisierter Memoisierung bestehen bleiben.
+
+\subsubsection{Speichereffizienz (Memory Allocation)}
+Die Analyse bestätigt die erwarteten Unterschiede im Speicher-Overhead der Fiber-Engine (vgl. \cref{sss:fiber-engine-structure}). Beim Hinzufügen von 1.000 Zeilen belegt Svelte \qty{2,88}{MB} Heap-Speicher, während React zwischen \qty{4,41}{MB} und \qty{4,58}{MB} beansprucht \cite{krause-benchmark-2026}. Auch nach mehreren Zyklen bleibt React mit \qty{1,96}{MB} nahezu doppelt so speicherintensiv wie Svelte mit \qty{1,02}{MB} \cite{krause-benchmark-2026}.
+
+\subsubsection{Verhalten bei partiellen Updates}
+Bei Aktualisierungen jedes zehnten Elements benötigt Svelte \qty{11,0}{ms}, React dagegen \qty{13,9}{ms} bis \qty{14,0}{ms} \cite{krause-benchmark-2026}. Dies belegt das effizientere Skalierungsverhalten der feingranularen Reaktivität gegenüber der Reconciliation (\cref{ss:update-complexity}).
+
+\subsection{Kritische Würdigung: Die methodische Grenze}
+\label{ss:benchmark-limitations}
+
+Der js-framework-benchmark liefert zwar aussagekräftige Ergebnisse zur Effizienz von DOM-Operationen und Speicherallokationen. Eine reale Dauerbelastung, bei der viele UI-Elemente gleichzeitig mit hoher Frequenz (z.\,B. 60 Hz) interagieren, bleibt jedoch unberücksichtigt. Zudem wird die Metrik Interaction to Next Paint (INP) nicht abgebildet, wodurch die Frage offen bleibt, ab welchem Punkt die summierte Last das Frame-Budget durch Long Tasks (\cref{sss:frame-budget}) dauerhaft überschreitet.
+
+\section{Akademische Leistungsstudien und verwandte Arbeiten}
+\label{s:academic-studies}
+Während Industrie-Benchmarks (vgl. \cref{s:existing-benchmarks}) vor allem die reine Ausführungsgeschwindigkeit betrachten, analysiert die wissenschaftliche Forschung, welche architektonischen Faktoren diese Leistung beeinflussen. 
+
+\subsection{Analysen zum Virtual-DOM-Overhead}
+Studien belegen die in \cref{ss:abstraction-costs} beschriebenen Abstraktionskosten. Bai (2023) identifiziert das VDOM als Flaschenhals, der durch die Erzeugung virtueller Knoten einen ca. 1,7-fach höheren Aufwand gegenüber direkten DOM-Manipulationen verursacht \cite{bai-millionjs-2023}. Putra et al. (2025) messen im Idle-Zustand für Svelte 3 einen Speicherbedarf von \qty{7,8}{MB}, während React 18 \qty{14,0}{MB} benötigt \cite{putra-performance-2025}. Levlin (2020) zeigt, dass eine Änderung an einem Einzelelement bei React 16 rund \qty{16,58}{ms} beansprucht, was fast das gesamte Frame-Budget (\cref{sss:frame-budget}) ausschöpft, während Svelte 3 hierfür lediglich \qty{0,11}{ms} benötigt \cite{levlin-dom-benchmark-2020}.
+
+\subsection{Laufzeit- vs. Compiler-Architekturen im direkten Vergleich}
+Der Architekturunterschied zwischen einem Laufzeit-Framework wie React und einem Compiler-Ansatz wie Svelte zeigt sich auch in weiteren vergleichenden Metriken. Laut Ollila et al. arbeitet Svelte 3 beim reinen Scripting mindestens 50\,\% effizienter als React 17, da der Compiler statische Inhalte bereits zur Build-Zeit optimiert \cite{ollila-rendering_performance-2022}. Sowohl bei Untersuchungen zur DOM-Manipulation beim Erzeugen von Elementen als auch in Vergleichstests von Webanwendungen zeigt Svelte deutlich kürzere Lade- und initiale Rendering-Zeiten. Beim Löschen von Komponenten bleibt die Effizienz dagegen weitgehend gleich. Laut Literatur liegen die Vorteile vor allem im Kompilierungsansatz und der daraus resultierenden kleineren \textit{Bundle Size}, wodurch weniger Daten geladen und verarbeitet werden müssen \cite{performance-svelte-angular-2021, perbandingan-svelte-react-2025}. Dies deckt sich mit den Messungen von Levlin (2020). In seinen Tests erreicht Svelte 3 eine Bundle-Größe von etwa 3,6\,kB, während React 16 bei 6,4\,kB liegt. Allerdings relativiert Levlin diese Zahlen und macht deutlich, dass VDOM-basierte Architekturen insbesondere bei umfangreichen Aktualisierungen Vorteile haben. Bei der Aktualisierung von 10.000 bereits gerenderten Elementen erzielte React 16 mit durchschnittlich \qty{17,86}{ms} deutlich bessere Ergebnisse als Svelte 3, das hierfür \qty{885,03}{ms} benötigte \cite{levlin-dom-benchmark-2020}.
+
+\section{Identifikation der Forschungslücke}
+\label{s:research-gap}
+
+Trotz der vorhandenen Daten fehlen für die Bewertung moderner, hochgradig reaktiver Anwendungen zwei Grundlagen:
+
+\subsection{Fokus auf veraltete Framework-Generationen}
+Zum einen beruhen die in der Literatur aufgeführten Studien auf älteren Framework-Versionen \cite{levlin-dom-benchmark-2020, putra-performance-2025, ollila-rendering_performance-2022}. Häufig kommen dabei Svelte 3 sowie React 16 oder 18 zum Einsatz \cite{levlin-dom-benchmark-2020, putra-performance-2025}. Aktuelle architektonische Paradigmenwechsel bleiben somit unberücksichtigt. Dazu gehören unter anderem der React Compiler (React 19), der die Memoisierung automatisiert (\cref{ss:react-compiler}), sowie die auf Runes aufbauende Signal-Architektur in Svelte 5, die Reaktivität zur Laufzeit feingranular steuert (\cref{ss:svelte-reactivity}). Da Svelte 3 dieses Reaktivitätsmodell noch nicht besaß, sind Studien, die auf dieser Version basieren, für die Bewertung von Svelte 5 unter Dauerlast nur bedingt aussagekräftig.
+
+\subsection{Fehlende Untersuchung von kombinierter Dauerlast}
+Zum anderen konzentrieren sich die Testfälle in Studien und Benchmarks meist auf erste Renderzeiten oder isolierte, nacheinander ausgeführte Listenoperationen unter kontrollierten Bedingungen \cite{krause-benchmark-2026, levlin-dom-benchmark-2020, putra-performance-2025, ollila-rendering_performance-2022}. Die Auswirkungen einer kombinierten Stressbelastung, bestehend aus extrem hoher UI-Dichte zusammen mit hoher Update-Frequenz, auf den Main Thread sind bisher kaum untersucht. Wichtige Metriken wie die Interaction to Next Paint (INP) oder das Auftreten von Long Tasks und ein dauerhaftes Überschreiten des 16,7-ms-Frame-Budgets (vgl. \cref{sss:frame-budget}) wurden für neuere Framework-Versionen bislang nicht umfassend berücksichtigt.
+
+\subsection{Ableitung für diese Arbeit}
+Genau an diesem Punkt setzt die vorliegende Bachelorarbeit an. Um den in \cref{sss:tipping-point} theoretisch hergeleiteten \textit{Tipping Point} der beiden Architekturen fundiert zu bewerten, ist ein gezielter Stresstest erforderlich. Dieser muss die modernsten Framework-Generationen unter einer simulierten Dauerlast evaluieren und den direkten Einfluss auf die Responsivität (INP) sowie die Speicherallokation messbar machen.

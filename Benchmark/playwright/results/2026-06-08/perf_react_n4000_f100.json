@@ -1,0 +1,82 @@
+{
+  "framework": "react",
+  "gridSize": 4000,
+  "intervalMs": 100,
+  "tickCount": 100,
+  "metric": "performance",
+  "repetitions": [
+    {
+      "scriptingMsPerTick": 4.237049999999993,
+      "renderingMsPerTick": 4.812320000000002,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 3.9354899999999953,
+      "renderingMsPerTick": 4.6951100000000014,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 4.026879999999996,
+      "renderingMsPerTick": 4.738539999999999,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 4.152209999999989,
+      "renderingMsPerTick": 4.68926,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 4.220069999999993,
+      "renderingMsPerTick": 4.78382,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 4.1914399999999965,
+      "renderingMsPerTick": 5.00977,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 4.214399999999995,
+      "renderingMsPerTick": 4.74796,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 4.294839999999988,
+      "renderingMsPerTick": 4.751769999999999,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 4.320849999999992,
+      "renderingMsPerTick": 4.709380000000001,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 4.329489999999995,
+      "renderingMsPerTick": 4.70571,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    }
+  ],
+  "n": 10,
+  "median": {
+    "scriptingMsPerTick": 4.217234999999993,
+    "renderingMsPerTick": 4.74325,
+    "longTaskCount": 0,
+    "longTaskMs": 0
+  },
+  "iqr": {
+    "scriptingMsPerTick": 0.1426299999999996,
+    "renderingMsPerTick": 0.07811000000000057,
+    "longTaskCount": 0,
+    "longTaskMs": 0
+  }
+}

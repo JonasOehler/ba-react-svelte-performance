@@ -1,0 +1,19 @@
+{
+  "name": "@benchmark/shared-logic",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./dist/MockEngine.js",
+  "types": "./dist/MockEngine.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/MockEngine.js",
+      "types": "./dist/MockEngine.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3"
+  }
+}

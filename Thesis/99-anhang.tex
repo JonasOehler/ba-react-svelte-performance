@@ -1,0 +1,363 @@
+\phantomsection
+\addcontentsline{toc}{chapter}{Anhang}
+\part*{Anhang}
+
+\cleardoublepage
+\chapter{Quellcode-Listings}
+\label{ch:a_listings}
+
+\begin{lstlisting}[language=TypeScript, caption={Kerninterfaces des Pakets @benchmark/shared-logic.}, label={lst:interfaces}]
+export interface GridItem     { id: number; value: number; }
+export interface TickMutation { id: number; newValue: number; }
+
+export interface TestPlan {
+  initialState: GridItem[];
+  ticks:        TickMutation[][];
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=TypeScript, caption={Bailout-Guard innerhalb der Tick-Generierung.}, label={lst:bailout}]
+let newValue: number;
+do {
+  newValue = Math.floor(rand() * 100);
+} while (newValue === (currentValues[id] as number));
+\end{lstlisting}
+
+\begin{lstlisting}[language=TypeScript, caption={Drift-korrigierter Tick-Scheduler in ticker.worker.ts.}, label={lst:worker}]
+let expectedTime = performance.now() + intervalMs;
+
+function scheduleNextTick() {
+  const now       = performance.now();
+  const drift     = now - expectedTime;
+  const nextDelay = Math.max(0, intervalMs - drift);
+  expectedTime   += intervalMs;
+
+  setTimeout(() => {
+    ctx.postMessage({ type: 'TICK' });
+    scheduleNextTick();
+  }, nextDelay);
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=TypeScript, caption={Die Komponente \texttt{Grid.tsx} übergibt ausschließlich den primitiven Wert \texttt{value} als Daten-Prop an \texttt{Cell}.}, label={lst:react-grid}]
+export function Grid({ items }: GridProps) {
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", width: 900, lineHeight: 0 }}>
+      {items.map((item) => (
+        <Cell key={item.id} value={item.value} />
+      ))}
+    </div>
+  );
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=TypeScript, caption={Immutables Grid-Update in App.tsx: Nur mutierte Zellen erhalten eine neue Objektreferenz.}, label={lst:react-update}]
+worker.onmessage = (e: MessageEvent<{ type: string }>) => {
+  if (e.data.type !== 'TICK') return;
+  // ...
+  const ticks = plan.ticks;
+  if (tickIndexRef.current >= ticks.length) return;
+  const mutations = ticks[tickIndexRef.current];
+  setGrid((prev) => {
+    const next = [...prev];
+    for (const { id, newValue } of mutations) {
+      next[id] = { id, value: newValue };
+    }
+    return next;
+  });
+  tickIndexRef.current++;
+  // ...
+};
+\end{lstlisting}
+
+\begin{lstlisting}[language=TypeScript, caption={Benchmark-Start-Logik in App.tsx: Der Worker startet erst auf ein externes Event hin.}, label={lst:react-lifecycle}]
+const startWorker = () => {
+  worker.postMessage({ command: 'start', intervalMs: TICK_INTERVAL_MS });
+};
+window.addEventListener('benchmark-start', startWorker, { once: true });
+
+if (!IS_BENCHMARK_MODE) {
+  window.dispatchEvent(new CustomEvent('benchmark-start'));
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=TypeScript, caption={Aktivierung des React Compilers in vite.config.ts.}, label={lst:react-compiler-config}]
+import { defineConfig } from "vite";
+import react, { reactCompilerPreset } from "@vitejs/plugin-react";
+import babel from "@rolldown/plugin-babel";
+
+export default defineConfig({
+  plugins: [
+    react(),
+    babel({ presets: [reactCompilerPreset()] }),
+  ],
+  preview: { port: 4173, strictPort: true },
+});
+\end{lstlisting}
+
+\begin{lstlisting}[language=TypeScript, caption={Modulebenen-Block in App.svelte: TestPlan wird einmalig außerhalb der Komponenteninstanz berechnet.}, label={lst:svelte-module}]
+<script module lang="ts">
+import { MockEngine } from '@benchmark/shared-logic';
+import type { TestPlan } from '@benchmark/shared-logic';
+import { GRID_SIZE, TICK_COUNT, MUTATION_RATE, SEED, TICK_INTERVAL_MS } from './config';
+const engine = new MockEngine();
+const plan: TestPlan = engine.generateTestPlan(
+  GRID_SIZE, TICK_COUNT, MUTATION_RATE, SEED
+);
+</script>
+\end{lstlisting}
+
+\begin{lstlisting}[language=TypeScript, caption={Grid-Initialisierung in App.svelte: Reaktiver Zustand auf Basis einer Shallow-Copy der initialState-Objekte.}, label={lst:svelte-state}]
+let grid = $state(plan.initialState.map(item => ({ ...item })));
+\end{lstlisting}
+
+\begin{lstlisting}[language=TypeScript, caption={Prop-Empfang in Grid.svelte und Cell.svelte via \$props().}, label={lst:svelte-props}]
+// Grid.svelte
+let { items }: { items: GridItem[] } = $props();
+// Cell.svelte
+let { value }: { value: number } = $props();
+\end{lstlisting}
+
+\begin{lstlisting}[language=TypeScript, caption={Direkte Mutation des reaktiven Grids in \texttt{App.svelte}.}, label={lst:svelte-update}]
+const mutations = plan.ticks[tickIndex];
+for (const { id, newValue } of mutations) {
+  grid[id].value = newValue;
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=TypeScript, caption={Worker-Steuerung in App.svelte via \$effect.}, label={lst:svelte-effect}]
+$effect(() => {
+  const worker = new Worker(
+    new URL('./ticker.worker.ts', import.meta.url),
+    { type: 'module' }
+  );
+  // ... onmessage, startWorker, IS_BENCHMARK_MODE-Logik
+  return () => {
+    worker.terminate();
+    window.removeEventListener('benchmark-start', startWorker);
+  };
+});
+\end{lstlisting}
+
+\begin{lstlisting}[language=TypeScript, caption={Playwright-Konfiguration in playwright.config.ts.}, label={lst:playwright-config}]
+export default defineConfig({
+  testDir: './src',
+  timeout: 3_200_000,   // globales Timeout: 53 min
+  workers: 1,
+  use: {
+    browserName: 'chromium',
+    channel:     'chromium',
+    headless:    true,
+    launchOptions: {
+      args: process.env['NO_GPU'] ? [] : ['--disable-software-rasterizer'],
+    },
+    viewport: { width: 1280, height: 720 },
+  },
+  projects: [
+    { name: 'memory',      testMatch: 'memory.spec.ts'      },
+    { name: 'performance', testMatch: 'performance.spec.ts' },
+    { name: 'inp',         testMatch: 'inp.spec.ts'         },
+  ],
+});
+\end{lstlisting}
+
+\begin{lstlisting}[language=TypeScript, caption={Aufbau der Testmatrix in scenarios.ts.}, label={lst:scenarios}]
+export const GRID_SIZES   = [100, 400, 900, 1600, 4000, 6000, 8000, 10000];
+export const FREQUENCIES  = [
+  { intervalMs: 100, tickCount: 100 },
+  { intervalMs:  50, tickCount: 200 },
+  { intervalMs:  33, tickCount: 300 },
+  { intervalMs:  16, tickCount: 500 },
+];
+export const REPETITIONS  = 10;
+export const FRAMEWORKS   = {
+  react:  'http://localhost:4173',
+  svelte: 'http://localhost:4174',
+};
+
+export function allScenarios(): Scenario[] {
+  const result: Scenario[] = [];
+  for (const gridSize of GRID_SIZES) {
+    for (const { intervalMs, tickCount } of FREQUENCIES) {
+      for (const framework of Object.keys(FRAMEWORKS) as Framework[]) {
+        result.push({ framework, gridSize, intervalMs, tickCount });
+      }
+    }
+  }
+  return result;
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=TypeScript, caption={Berechnung der INP-Phasen in injectINPObserver (inp.ts).}, label={lst:inp-phases}]
+{
+  duration:          e.duration,
+  inputDelay:        e.processingStart - e.startTime,
+  processingTime:    e.processingEnd   - e.processingStart,
+  presentationDelay: e.duration - (e.processingEnd - e.startTime),
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=TypeScript, caption={INP-Berechnung nach W3C-Spezifikation in calcINP (inp.ts).}, label={lst:inp-calc}]
+const sorted      = [...allEntries].sort((a, b) => b.duration - a.duration);
+const ignoreCount = Math.floor(allEntries.length / 50);
+const worst       = sorted[ignoreCount] ?? sorted[0]!;
+return {
+  inp:               worst.duration,
+  inputDelay:        worst.inputDelay,
+  processingTime:    worst.processingTime,
+  presentationDelay: worst.presentationDelay,
+  pooledEntries:     allEntries.length,
+};
+\end{lstlisting}
+
+\begin{lstlisting}[language=TypeScript, caption={Klassifizierung von Trace-Ereignissen in parseTrace (cdp.ts).}, label={lst:trace-parse}]
+// ph: 'X' = complete event (has both start timestamp and duration)
+// dur field is in microseconds -> divide by 1000 for milliseconds
+const SCRIPTING_NAMES = new Set([
+  'EvaluateScript', 'FunctionCall', 'EventDispatch',
+  'v8.execute', 'RunMicrotasks',
+]);
+const RENDERING_NAMES = new Set([
+  'RecalculateStyles', 'Layout',
+  'UpdateLayerTree', 'ParseAuthorStyleSheet',
+]);
+\end{lstlisting}
+
+\cleardoublepage
+\chapter{Vollständige Messergebnisse}
+\label{ch:a_benchmark}
+
+Die folgende Tabelle dokumentiert die aggregierten Kennwerte aller 64 Benchmark-Konfigurationen
+(8~$n$-Stufen $\times$ 4~Frequenzstufen $\times$ 2~Frameworks, je 10~Wiederholungen).
+Alle Werte sind Mediane über die 10~Wiederholungen; der Interquartilsabstand steht jeweils in
+Klammern.
+Abkürzungen: FW\,=\,Framework (R\,=\,React\,19, S\,=\,Svelte\,5);
+$n$\,=\,Zellanzahl; $f$\,=\,Updatefrequenz in Hz;
+INP\,=\,Interaction to Next Paint in ms;
+iD\,=\,\textit{inputDelay} in ms;
+pT\,=\,\textit{processingTime} in ms;
+pD\,=\,\textit{presentationDelay} in ms;
+Scr.\,Md.\,=\,\textit{scriptingMsPerTick}-Median in ms/Tick;
+Ren.\,Md.\,=\,\textit{renderingMsPerTick}-Median in ms/Tick;
+LT\,=\,\textit{longTaskCount}-Median;
+Heap\,$\Delta$\,=\,JS-Heap-Delta in MB.
+
+\begin{landscape}
+{\scriptsize
+\begin{longtable}{@{}l r r r  r r r  r r  r r  r r@{}}
+  \caption{Vollständige Messergebnisse aller 64 Benchmark-Konfigurationen.}%
+  \label{tab:appendix-benchmark} \\
+  \toprule
+  FW & $n$ & $f$ & INP
+     & iD & pT & pD
+     & Scr.\,Md. & (IQR)
+     & Ren.\,Md. & (IQR)
+     & LT & Heap\,$\Delta$ \\
+     & & (Hz) & (ms) & (ms) & (ms) & (ms)
+     & (ms/Tick) & & (ms/Tick) & & & (MB) \\
+  \midrule
+\endfirsthead
+  \multicolumn{13}{l}{\footnotesize\itshape (Fortsetzung von vorheriger Seite)} \\[2pt]
+  \toprule
+  FW & $n$ & $f$ & INP
+     & iD & pT & pD
+     & Scr.\,Md. & (IQR)
+     & Ren.\,Md. & (IQR)
+     & LT & Heap\,$\Delta$ \\
+     & & (Hz) & (ms) & (ms) & (ms) & (ms)
+     & (ms/Tick) & & (ms/Tick) & & & (MB) \\
+  \midrule
+\endhead
+  \midrule
+  \multicolumn{13}{r}{\footnotesize\itshape (wird fortgesetzt)} \\
+\endfoot
+  \bottomrule
+\endlastfoot
+
+% ── React 19 ──────────────────────────────────────────────────────────────────
+\multicolumn{13}{l}{\textit{React\,19}} \\[2pt]
+R &    100 & 10           &  32 &  0{,}4 & 0{,}1 &  31{,}5 &  0{,}27 & (0{,}01) &  0{,}15 & (0{,}01) &      0 & 0{,}42 \\
+R &    100 & 20           &  32 &  0{,}3 & 0{,}1 &  31{,}6 &  0{,}23 & (0{,}00) &  0{,}14 & (0{,}00) &      0 & 0{,}47 \\
+R &    100 & ${\approx}30$ &  32 &  0{,}4 & 0{,}0 &  31{,}6 &  0{,}22 & (0{,}01) &  0{,}14 & (0{,}00) &      0 & 0{,}51 \\
+R &    100 & ${\approx}62$ &  48 &  0{,}2 & 0{,}0 &  47{,}8 &  0{,}20 & (0{,}01) &  0{,}14 & (0{,}01) &      0 & 0{,}53 \\
+\midrule
+R &    400 & 10           &  40 &  0{,}4 & 0{,}2 &  39{,}4 &  0{,}60 & (0{,}02) &  0{,}45 & (0{,}01) &      0 & 0{,}56 \\
+R &    400 & 20           &  32 &  1{,}8 & 0{,}0 &  30{,}2 &  0{,}52 & (0{,}03) &  0{,}44 & (0{,}01) &      0 & 0{,}60 \\
+R &    400 & ${\approx}30$ &  32 &  0{,}4 & 0{,}2 &  31{,}4 &  0{,}50 & (0{,}03) &  0{,}43 & (0{,}00) &      0 & 0{,}60 \\
+R &    400 & ${\approx}62$ &  40 &  1{,}0 & 0{,}0 &  39{,}0 &  0{,}49 & (0{,}02) &  0{,}41 & (0{,}01) &      0 & 0{,}65 \\
+\midrule
+R &    900 & 10           &  32 &  3{,}1 & 0{,}0 &  28{,}9 &  1{,}11 & (0{,}03) &  1{,}06 & (0{,}01) &      0 & 0{,}72 \\
+R &    900 & 20           &  32 &  1{,}2 & 0{,}0 &  30{,}8 &  1{,}02 & (0{,}05) &  1{,}05 & (0{,}01) &      0 & 0{,}78 \\
+R &    900 & ${\approx}30$ &  32 &  3{,}6 & 0{,}0 &  28{,}4 &  0{,}97 & (0{,}02) &  1{,}05 & (0{,}01) &      0 & 0{,}80 \\
+R &    900 & ${\approx}62$ &  48 &  2{,}3 & 0{,}1 &  45{,}6 &  0{,}98 & (0{,}05) &  1{,}00 & (0{,}02) &      0 & 0{,}85 \\
+\midrule
+R & 1\,600 & 10           &  32 &  0{,}6 & 0{,}0 &  31{,}4 &  1{,}69 & (0{,}03) &  1{,}89 & (0{,}02) &      0 & 1{,}06 \\
+R & 1\,600 & 20           &  32 &  0{,}5 & 0{,}0 &  31{,}5 &  1{,}65 & (0{,}10) &  1{,}89 & (0{,}01) &      0 & 1{,}10 \\
+R & 1\,600 & ${\approx}30$ &  32 &  6{,}7 & 0{,}2 &  25{,}1 &  1{,}61 & (0{,}10) &  1{,}91 & (0{,}01) &      0 & 1{,}12 \\
+R & 1\,600 & ${\approx}62$ &  32 &  5{,}5 & 0{,}1 &  26{,}4 &  1{,}57 & (0{,}02) &  1{,}75 & (0{,}02) &      0 & 1{,}11 \\
+\midrule
+R & 4\,000 & 10           &  48 & 11{,}8 & 0{,}1 &  36{,}1 &  4{,}22 & (0{,}14) &  4{,}74 & (0{,}08) &      0 & 2{,}13 \\
+R & 4\,000 & 20           &  56 & 11{,}9 & 1{,}0 &  43{,}1 &  4{,}00 & (0{,}28) &  4{,}61 & (0{,}10) &      0 & 2{,}04 \\
+R & 4\,000 & ${\approx}30$ &  56 & 12{,}6 & 0{,}1 &  43{,}3 &  4{,}21 & (0{,}12) &  4{,}60 & (0{,}03) &      0 & 2{,}15 \\
+R & 4\,000 & ${\approx}62$ &  56 & 16{,}0 & 0{,}1 &  39{,}9 &  2{,}88 & (0{,}05) &  2{,}83 & (0{,}03) &      0 & 2{,}22 \\
+\midrule
+R & 6\,000 & 10           &  64 & 18{,}3 & 0{,}1 &  45{,}6 &  6{,}53 & (0{,}47) &  7{,}38 & (0{,}08) &      0 & 2{,}93 \\
+R & 6\,000 & 20           &  88 & 19{,}3 & 0{,}1 &  68{,}6 &  6{,}35 & (0{,}35) &  7{,}22 & (0{,}26) &      0 & 2{,}96 \\
+R & 6\,000 & ${\approx}30$ &  88 & 24{,}9 & 0{,}0 &  63{,}1 &  6{,}40 & (0{,}17) &  5{,}82 & (0{,}06) &      0 & 3{,}00 \\
+R & 6\,000 & ${\approx}62$ &  80 & 25{,}4 & 0{,}0 &  54{,}6 &  3{,}27 & (0{,}17) &  3{,}51 & (0{,}06) &      0 & 2{,}95 \\
+\midrule
+R & 8\,000 & 10           &  72 &  4{,}8 & 0{,}1 &  67{,}1 &  9{,}13 & (0{,}83) & 10{,}46 & (0{,}15) &      0 & 3{,}62 \\
+R & 8\,000 & 20           &  96 & 19{,}1 & 0{,}1 &  76{,}8 &  9{,}30 & (0{,}57) & 10{,}05 & (0{,}18) &      0 & 3{,}69 \\
+R & 8\,000 & ${\approx}30$ &  96 & 24{,}5 & 0{,}0 &  71{,}5 &  7{,}24 & (0{,}40) &  7{,}36 & (0{,}08) &  0{,}5 & 3{,}77 \\
+R & 8\,000 & ${\approx}62$ & 104 & 69{,}6 & 0{,}0 &  34{,}4 &  3{,}53 & (0{,}20) &  4{,}32 & (0{,}07) &     58 & 3{,}73 \\
+\midrule
+R & 10\,000 & 10           &  88 & 36{,}1 & 0{,}0 &  51{,}9 & 11{,}24 & (0{,}66) & 13{,}31 & (0{,}48) &      0 & 4{,}45 \\
+R & 10\,000 & 20           &  96 & 20{,}9 & 0{,}0 &  75{,}1 & 11{,}17 & (0{,}51) & 11{,}87 & (0{,}18) & 15{,}5 & 4{,}51 \\
+R & 10\,000 & ${\approx}30$ & 104 &  5{,}0 & 0{,}0 &  99{,}0 &  7{,}43 & (0{,}22) &  8{,}40 & (0{,}07) &     45 & 4{,}56 \\
+R & 10\,000 & ${\approx}62$ & 144 & 56{,}9 & 0{,}0 &  87{,}1 &  3{,}42 & (0{,}13) &  4{,}95 & (0{,}05) &     86 & 4{,}83 \\
+
+\midrule\midrule
+% ── Svelte 5 ──────────────────────────────────────────────────────────────────
+\multicolumn{13}{l}{\textit{Svelte\,5}} \\[2pt]
+S &    100 & 10           &  32 &  0{,}3 & 0{,}0 &  31{,}7 &  0{,}15 & (0{,}00) &  0{,}14 & (0{,}00) &      0 & 0{,}15 \\
+S &    100 & 20           &  32 &  0{,}4 & 0{,}0 &  31{,}6 &  0{,}13 & (0{,}00) &  0{,}14 & (0{,}00) &      0 & 0{,}16 \\
+S &    100 & ${\approx}30$ &  32 &  0{,}3 & 0{,}0 &  31{,}7 &  0{,}13 & (0{,}00) &  0{,}13 & (0{,}01) &      0 & 0{,}16 \\
+S &    100 & ${\approx}62$ &  32 &  0{,}4 & 0{,}0 &  31{,}6 &  0{,}12 & (0{,}00) &  0{,}14 & (0{,}02) &      0 & 0{,}18 \\
+\midrule
+S &    400 & 10           &  32 &  0{,}2 & 0{,}0 &  31{,}8 &  0{,}35 & (0{,}01) &  0{,}44 & (0{,}00) &      0 & 0{,}16 \\
+S &    400 & 20           &  32 &  1{,}3 & 0{,}0 &  30{,}7 &  0{,}29 & (0{,}02) &  0{,}42 & (0{,}01) &      0 & 0{,}17 \\
+S &    400 & ${\approx}30$ &  32 &  0{,}3 & 0{,}0 &  31{,}7 &  0{,}26 & (0{,}01) &  0{,}42 & (0{,}00) &      0 & 0{,}18 \\
+S &    400 & ${\approx}62$ &  32 &  1{,}1 & 0{,}0 &  30{,}9 &  0{,}25 & (0{,}01) &  0{,}41 & (0{,}00) &      0 & 0{,}17 \\
+\midrule
+S &    900 & 10           &  32 &  0{,}6 & 0{,}1 &  31{,}3 &  0{,}59 & (0{,}01) &  1{,}03 & (0{,}00) &      0 & 0{,}19 \\
+S &    900 & 20           &  32 &  0{,}4 & 0{,}0 &  31{,}6 &  0{,}53 & (0{,}02) &  1{,}03 & (0{,}01) &      0 & 0{,}17 \\
+S &    900 & ${\approx}30$ &  32 &  0{,}4 & 0{,}0 &  31{,}6 &  0{,}48 & (0{,}01) &  1{,}03 & (0{,}01) &      0 & 0{,}18 \\
+S &    900 & ${\approx}62$ &  48 &  1{,}8 & 0{,}0 &  46{,}2 &  0{,}47 & (0{,}01) &  0{,}98 & (0{,}01) &      0 & 0{,}20 \\
+\midrule
+S & 1\,600 & 10           &  32 &  3{,}0 & 0{,}0 &  29{,}0 &  0{,}87 & (0{,}01) &  1{,}86 & (0{,}01) &      0 & 0{,}21 \\
+S & 1\,600 & 20           &  32 &  5{,}8 & 0{,}0 &  26{,}2 &  0{,}80 & (0{,}03) &  1{,}87 & (0{,}02) &      0 & 0{,}22 \\
+S & 1\,600 & ${\approx}30$ &  40 &  4{,}5 & 0{,}0 &  35{,}5 &  0{,}76 & (0{,}01) &  1{,}87 & (0{,}02) &      0 & 0{,}22 \\
+S & 1\,600 & ${\approx}62$ &  48 &  4{,}6 & 0{,}0 &  43{,}4 &  0{,}75 & (0{,}02) &  1{,}73 & (0{,}02) &      0 & 0{,}24 \\
+\midrule
+S & 4\,000 & 10           &  48 &  0{,}9 & 0{,}1 &  47{,}0 &  1{,}81 & (0{,}11) &  4{,}74 & (0{,}08) &      0 & 0{,}36 \\
+S & 4\,000 & 20           &  48 &  8{,}8 & 0{,}0 &  39{,}2 &  1{,}77 & (0{,}04) &  4{,}75 & (0{,}09) &      0 & 0{,}37 \\
+S & 4\,000 & ${\approx}30$ &  48 &  8{,}6 & 0{,}2 &  39{,}2 &  1{,}78 & (0{,}15) &  4{,}61 & (0{,}04) &      0 & 0{,}39 \\
+S & 4\,000 & ${\approx}62$ &  56 & 20{,}6 & 0{,}2 &  35{,}2 &  1{,}69 & (0{,}04) &  3{,}30 & (0{,}03) &      0 & 0{,}38 \\
+\midrule
+S & 6\,000 & 10           &  56 & 15{,}4 & 0{,}0 &  40{,}6 &  2{,}64 & (0{,}07) &  7{,}33 & (0{,}14) &      0 & 0{,}46 \\
+S & 6\,000 & 20           &  64 & 15{,}0 & 0{,}0 &  49{,}0 &  2{,}53 & (0{,}05) &  7{,}13 & (0{,}06) &      0 & 0{,}51 \\
+S & 6\,000 & ${\approx}30$ &  64 & 23{,}6 & 0{,}2 &  40{,}2 &  2{,}65 & (0{,}04) &  7{,}50 & (0{,}08) &      0 & 0{,}54 \\
+S & 6\,000 & ${\approx}62$ &  64 & 22{,}3 & 0{,}0 &  41{,}7 &  2{,}42 & (0{,}04) &  3{,}85 & (0{,}03) &      0 & 0{,}54 \\
+\midrule
+S & 8\,000 & 10           &  64 &  1{,}5 & 0{,}0 &  62{,}5 &  3{,}49 & (0{,}08) & 10{,}12 & (0{,}12) &      0 & 0{,}58 \\
+S & 8\,000 & 20           &  80 & 18{,}2 & 0{,}0 &  61{,}8 &  3{,}41 & (0{,}10) & 10{,}18 & (0{,}19) &      0 & 0{,}61 \\
+S & 8\,000 & ${\approx}30$ &  80 & 22{,}8 & 0{,}0 &  57{,}2 &  3{,}30 & (0{,}19) &  8{,}59 & (0{,}07) &      0 & 0{,}58 \\
+S & 8\,000 & ${\approx}62$ &  80 & 32{,}1 & 0{,}0 &  47{,}9 &  3{,}08 & (0{,}07) &  4{,}45 & (0{,}06) &     29 & 0{,}66 \\
+\midrule
+S & 10\,000 & 10           &  80 &  1{,}9 & 0{,}0 &  78{,}1 &  4{,}12 & (0{,}10) & 13{,}55 & (0{,}13) &      0 & 0{,}72 \\
+S & 10\,000 & 20           & 104 & 18{,}0 & 0{,}0 &  86{,}0 &  4{,}29 & (0{,}10) & 13{,}71 & (0{,}30) &  1{,}5 & 0{,}72 \\
+S & 10\,000 & ${\approx}30$ & 104 & 51{,}8 & 0{,}0 &  52{,}2 &  4{,}09 & (0{,}11) &  9{,}45 & (0{,}04) & 22{,}5 & 0{,}76 \\
+S & 10\,000 & ${\approx}62$ &  96 & 34{,}1 & 0{,}7 &  61{,}2 &  3{,}66 & (0{,}10) &  4{,}92 & (0{,}07) &     91 & 0{,}75 \\
+\end{longtable}
+}
+\end{landscape}

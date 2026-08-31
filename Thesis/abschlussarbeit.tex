@@ -1,0 +1,62 @@
+% laden der Präambel mit Latexbefehlen/-klassen
+\input{00-preambel}
+
+\begin{document}
+% globale Einstellung für Quellcodedarstellung mit listings
+\lstset{basicstyle=\scriptsize\ttfamily,language={[LaTeX]TeX}}
+
+% Seitennummerierung römisch
+\pagenumbering{roman}
+
+% Titelseiten
+\input{00-titel}
+
+\cleardoubleemptypage
+
+% Inhaltsverzeichnis
+% Zeigt Kapitel (1) und Abschnitte (2) an.
+\setcounter{tocdepth}{2}
+\tableofcontents
+
+\cleardoubleemptypage
+
+% Seitennummerierung zurücksetzen und arabisch für den Hauptteil
+\pagestyle{headings}
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+% Beginn der Kapitel (\include nutzt automatisch \clearpage)
+\include{01-einleitung}
+\include{02-theoretische-grundlagen}
+\include{03-stand-der-forschung}
+\input{04-methodik}
+\input{05-implementierung}
+\include{6-results-discussion-compact}
+\include{07-fazit}
+
+% Literaturverzeichnis
+\cleardoublepage
+\printbibliography[heading=bibintoc]
+
+% Nomenklatur (vor den Verzeichnissen)
+\cleardoublepage
+\input{98-nomenklatur}
+
+% Abbildungsverzeichnis
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{\listfigurename}
+\listoffigures
+
+% Tabellenverzeichnis
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{\listtablename}
+\listoftables
+
+% Anhang (ganz am Schluss, damit die Verzeichnisse davor nicht beeinflusst werden)
+\cleardoublepage
+\appendix
+\input{99-anhang}
+
+\end{document}

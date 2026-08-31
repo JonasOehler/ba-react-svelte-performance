@@ -1,0 +1,10 @@
+{
+  "name": "react-svelte-benchmark",
+  "private": true,
+  "workspaces": [
+    "shared-logic",
+    "react-app",
+    "svelte-app",
+    "playwright"
+  ]
+}

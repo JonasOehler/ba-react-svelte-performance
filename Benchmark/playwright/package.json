@@ -1,0 +1,19 @@
+{
+  "name": "@benchmark/runner",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "bench:memory":      "playwright test --project=memory",
+    "bench:performance": "playwright test --project=performance",
+    "bench:inp":         "playwright test --project=inp",
+    "bench:all":         "npm run bench:memory && npm run bench:performance && npm run bench:inp && npm run bench:summarize",
+    "bench:summarize":   "npx tsx src/scripts/summarize.ts",
+    "bench:smoke":       "playwright test --project=memory --grep \"react.*n=100.*f=100ms\" && playwright test --project=performance --grep \"react.*n=100.*f=100ms\" && playwright test --project=inp --grep \"react.*n=100.*f=100ms\"",
+    "postinstall":       "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.52.0",
+    "@types/node": "24.12.4",
+    "tsx": "4.19.4"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "framework": "react",
+  "gridSize": 900,
+  "intervalMs": 33,
+  "tickCount": 300,
+  "metric": "memory",
+  "repetitions": [
+    574668,
+    806228,
+    802588,
+    800616,
+    805616,
+    807868,
+    827588,
+    797064,
+    799040,
+    799768
+  ],
+  "n": 10,
+  "median": 801602,
+  "iqr": 7188
+}

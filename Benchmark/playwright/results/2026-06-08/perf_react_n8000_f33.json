@@ -1,0 +1,82 @@
+{
+  "framework": "react",
+  "gridSize": 8000,
+  "intervalMs": 33,
+  "tickCount": 300,
+  "metric": "performance",
+  "repetitions": [
+    {
+      "scriptingMsPerTick": 7.031156666666672,
+      "renderingMsPerTick": 7.3471266666666635,
+      "longTaskCount": 1,
+      "longTaskMs": 51
+    },
+    {
+      "scriptingMsPerTick": 7.191363333333339,
+      "renderingMsPerTick": 7.41032,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 7.4346466666666675,
+      "renderingMsPerTick": 7.32581,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 7.251579999999996,
+      "renderingMsPerTick": 7.364003333333335,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 7.462663333333325,
+      "renderingMsPerTick": 7.327133333333334,
+      "longTaskCount": 1,
+      "longTaskMs": 52
+    },
+    {
+      "scriptingMsPerTick": 6.885046666666671,
+      "renderingMsPerTick": 7.446503333333331,
+      "longTaskCount": 1,
+      "longTaskMs": 50
+    },
+    {
+      "scriptingMsPerTick": 7.224893333333331,
+      "renderingMsPerTick": 7.382723333333334,
+      "longTaskCount": 1,
+      "longTaskMs": 52
+    },
+    {
+      "scriptingMsPerTick": 7.748803333333329,
+      "renderingMsPerTick": 7.248409999999999,
+      "longTaskCount": 2,
+      "longTaskMs": 100
+    },
+    {
+      "scriptingMsPerTick": 7.381096666666658,
+      "renderingMsPerTick": 7.332023333333335,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 6.929656666666665,
+      "renderingMsPerTick": 7.437163333333336,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    }
+  ],
+  "n": 10,
+  "median": {
+    "scriptingMsPerTick": 7.238236666666664,
+    "renderingMsPerTick": 7.355564999999999,
+    "longTaskCount": 0.5,
+    "longTaskMs": 25
+  },
+  "iqr": {
+    "scriptingMsPerTick": 0.40348999999999524,
+    "renderingMsPerTick": 0.08318666666666541,
+    "longTaskCount": 1,
+    "longTaskMs": 52
+  }
+}

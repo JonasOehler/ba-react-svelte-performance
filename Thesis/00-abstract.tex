@@ -1,0 +1,39 @@
+%\cleardoubleemptypage
+\begin{abstract}
+Reaktionsfähige Benutzeroberflächen sind in datenintensiven Echtzeit-Anwendungen wie Monitoring-Dashboards ein zentrales Qualitätsmerkmal. React~19 und Svelte~5 verfolgen dabei grundlegend unterschiedliche Architekturansätze: React~19 kombiniert ein Virtual-DOM-basiertes Laufzeitmodell mit einem Compiler zur automatischen Memoisierung, während Svelte~5 compilerbasierte feingranulare Reaktivität einsetzt. Bestehende Vergleichsstudien basieren jedoch überwiegend auf älteren Framework-Versionen und untersuchen vorwiegend isolierte Operationen; empirische Daten unter kombinierter Dauerlast aus steigender UI-Dichte und hoher Update-Frequenz fehlen bislang. Diese Arbeit untersucht, wie sich React~19 und Svelte~5 hinsichtlich Interaktionslatenz (INP), Scripting-Aufwand und Speicherverbrauch unter kombiniert steigender UI-Dichte und Update-Frequenz unterscheiden und ab welcher Last-Kombination \textit{Long Tasks} den Main Thread dauerhaft blockieren. Dazu wurden in einem automatisierten Benchmark (Playwright, Chrome DevTools Protocol) 1920 Messläufe über acht UI-Dichtestufen ($n \in \{100 \ldots 10\,000\}$) und vier Update-Frequenzen (10 bis 62\,Hz) durchgeführt. Als Metriken dienten INP, Scripting-Aufwand pro Tick, JS-Heap-Delta sowie Long-Task-Zähler. Die Ergebnisse zeigen, dass kein Framework uneingeschränkt überlegen ist. Bei hoher UI-Dichte liefert Svelte~5 in der Mehrzahl der Szenarien geringeren Scripting-Aufwand und niedrigere INP-Werte; zudem liegt Sveltes \textit{Tipping Point} bei höheren $n$-Werten. Über alle Dichtestufen weist Svelte~5 zudem einen 2,8- bis 6,4-fach geringeren Heap-Verbrauch auf. Allerdings erzielt React~19 bei moderater UI-Dichte und hoher Update-Frequenz durch kooperatives Yielding der Fiber-Engine niedrigere INP-Werte. Unter Extremlast ($n = 10\,000$, 62\,Hz) kehrt sich das Long-Task-Verhältnis um: Svelte erzeugt dort mehr \textit{Long Tasks} als React. Für die Praxis ergibt sich: Svelte~5 ist bei hoher UI-Dichte und in speicherkritischen Umgebungen vorzuziehen; React~19 kann bei moderater Dichte und hoher Update-Frequenz die bessere Wahl sein.
+\end{abstract}
+
+%\cleardoubleemptypage
+\renewcommand\abstractname{Abstract}
+\begin{abstract}
+Responsive user interfaces are a central quality criterion in
+data-intensive real-time applications such as monitoring dashboards.
+React~19 and Svelte~5 pursue fundamentally different architectural
+approaches: React~19 combines a virtual DOM-based runtime model with
+a compiler for automatic memoization, while Svelte~5 employs
+compiler-based fine-grained reactivity. However, existing comparison
+studies are predominantly based on older framework versions and
+examine primarily isolated operations; empirical data under combined
+sustained load from increasing UI density and high update frequency
+are lacking. This work investigates how React~19 and Svelte~5 differ
+with respect to interaction latency (INP), scripting effort, and
+memory consumption under combined increasing UI density and update
+frequency, and at which load combination \textit{Long Tasks} persistently
+block the main thread. To this end, 1920 measurement runs were
+conducted in an automated benchmark (Playwright, Chrome DevTools
+Protocol) across eight UI density levels ($n \in \{100 \ldots
+10\,000\}$) and four update frequencies (10 to 62\,Hz). The metrics
+used were INP, scripting effort per tick, JS heap delta, and long
+task count. The results show that neither framework is universally
+superior. At high UI density, Svelte~5 delivers lower scripting
+effort and lower INP values in the majority of scenarios; Svelte's
+\textit{tipping point} additionally lies at higher $n$ values. Across all
+density levels, Svelte~5 additionally exhibits a 2.8- to 6.4-fold lower heap
+consumption. However, React~19 achieves lower INP values at moderate
+UI density and high update frequency through cooperative yielding of
+the Fiber engine. Under extreme load ($n = 10\,000$, 62\,Hz), the long
+task ratio reverses: Svelte produces more \textit{long tasks} than React. In practice: Svelte~5
+is preferable at high UI density and in memory-constrained
+environments; React~19 may be the better choice at moderate density
+and high update frequency.
+\end{abstract}

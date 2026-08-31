@@ -1,0 +1,82 @@
+{
+  "framework": "react",
+  "gridSize": 900,
+  "intervalMs": 50,
+  "tickCount": 200,
+  "metric": "performance",
+  "repetitions": [
+    {
+      "scriptingMsPerTick": 1.161859999999992,
+      "renderingMsPerTick": 1.0745,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 1.0516799999999942,
+      "renderingMsPerTick": 1.0522449999999992,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.9896499999999936,
+      "renderingMsPerTick": 1.0545450000000003,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 1.0660699999999934,
+      "renderingMsPerTick": 1.0476699999999999,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 1.0103949999999946,
+      "renderingMsPerTick": 1.0528849999999998,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 1.0215799999999957,
+      "renderingMsPerTick": 1.053845,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 1.0084049999999927,
+      "renderingMsPerTick": 1.0438900000000002,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 1.0020249999999944,
+      "renderingMsPerTick": 1.0457349999999996,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 1.0201349999999938,
+      "renderingMsPerTick": 1.055355,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.9931349999999955,
+      "renderingMsPerTick": 1.0472549999999996,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    }
+  ],
+  "n": 10,
+  "median": {
+    "scriptingMsPerTick": 1.015264999999994,
+    "renderingMsPerTick": 1.0525649999999995,
+    "longTaskCount": 0,
+    "longTaskMs": 0
+  },
+  "iqr": {
+    "scriptingMsPerTick": 0.04965499999999978,
+    "renderingMsPerTick": 0.007290000000000685,
+    "longTaskCount": 0,
+    "longTaskMs": 0
+  }
+}

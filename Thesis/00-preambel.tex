@@ -1,0 +1,193 @@
+% =============================================================================
+% Dokumentklasse und Spracheinstellung
+% =============================================================================
+% für elektronische Veröffentlichung (Standard)
+\documentclass[11pt,oneside,paper=A4,DIV=11,BCOR=0mm,abstract=true,headsepline,headings=normal,ngerman]{scrreprt}
+
+\usepackage[ngerman]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+% =============================================================================
+% Schriftart & Typographie
+% =============================================================================
+\usepackage{libertine}
+\usepackage{libertinust1math}
+\usepackage[auto]{microtype}
+\usepackage[htt]{hyphenat}          % Silbentrennung in \texttt
+\setlength{\emergencystretch}{3em}  % Notfall-Streckung bei langen Code-Snippets
+
+% Verhindert "Schusterjungen" und "Hurenkinder" (einzelne Zeilen auf neuer Seite)
+\clubpenalty = 10000
+\widowpenalty = 10000
+\displaywidowpenalty = 10000
+
+% Floats auf Float-Seiten oben ausrichten statt vertikal zentrieren
+\makeatletter
+\setlength{\@fptop}{0pt}
+\setlength{\@fpbot}{0pt plus 1fil}
+\makeatother
+
+% =============================================================================
+% Mathe, Symbole, Einheiten
+% =============================================================================
+\usepackage{amsmath}
+\usepackage{amsxtra}
+\usepackage{eurosym}
+\usepackage{siunitx}  
+\sisetup{locale=DE}
+\usepackage[version=4]{mhchem}
+\usepackage{chemfig}
+
+% =============================================================================
+% Bilder, Tabellen, Quellcode
+% =============================================================================
+\usepackage{graphicx}
+\setkeys{Gin}{width=\textwidth,height=0.45\textheight,keepaspectratio}
+% Abbildung mit benutzerdefinierter Breite (Höhenlimit bleibt einheitlich)
+\newcommand{\narrowfig}[2][0.8]{%
+  \includegraphics[width=#1\textwidth,height=0.45\textheight,keepaspectratio]{#2}}
+% Für gestapelte Subfigures: kleineres Höhenlimit damit beide passen
+\newcommand{\stackedfig}[1]{%
+  \includegraphics[width=\textwidth,height=0.35\textheight,keepaspectratio]{#1}}
+\usepackage{float}
+\usepackage{multirow,multicol,booktabs}
+\usepackage{threeparttable}
+\usepackage{longtable}
+\usepackage{rotating}
+\usepackage{pdflscape}  % Landscape-Seiten für Anhang-Tabelle
+\usepackage{ltablex} % Kombination aus tabularx und longtable
+\usepackage{subcaption}
+\captionsetup[subtable]{position=top}
+\usepackage{pdfpages}
+\usepackage{listings}
+\lstdefinelanguage{TypeScript}{
+  keywords={break, case, catch, continue, debugger, default, delete, do, else,
+    finally, for, function, if, in, instanceof, new, return, switch, this,
+    throw, try, typeof, var, void, while, with, const, let, of, class,
+    extends, import, export, from, interface, type, enum, implements,
+    abstract, as, async, await, declare, keyof, namespace, readonly,
+    undefined, null, true, false, any, string, number, boolean, never, void,
+    object, symbol, bigint, unknown},
+  sensitive=true,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]',
+  morestring=[b]",
+  morestring=[b]`,
+}
+\usepackage{blindtext}
+\usepackage{csquotes}
+
+% Darstellung von URL (wird von hyperref später erweitert)
+\usepackage{url}
+\urlstyle{same}
+
+% \code{...}: Inline-Code mit Zeilenumbruch an Sonderzeichen
+% Für reine Texte ohne LaTeX-Befehle; \texttt bleibt für Argumente mit \, etc.
+\newcommand{\code}[1]{\texttt{\nolinkurl{#1}}}
+
+% Fussnoten, auch für Tabellen
+\usepackage{footnote}
+\makesavenoteenv{tabular} 
+
+% =============================================================================
+% Literaturverzeichnis (BibLaTeX)
+% =============================================================================
+\usepackage[
+backend=biber,
+style=numeric,
+sorting=none,
+citestyle=numeric-comp,
+maxbibnames=10,
+giveninits=true,
+]{biblatex}
+
+\renewcommand*{\labelnamepunct}{\addcolon\addspace}
+
+% Pfad zur .bib Datei
+\addbibresource{literatur/literaturdatenbank.bib}
+
+% =============================================================================
+% Nomenklatur / Abkürzungsverzeichnis
+% =============================================================================
+\usepackage[intoc, german]{nomencl}
+\makenomenclature
+
+\RedeclareSectionCommand[tocbeforeskip=0.5em plus 0.3em]{chapter}
+\renewcommand{\nomname}{Abkürzungs- und Symbolverzeichnis}
+\setlength{\nomitemsep}{-\parsep}
+\newlength{\nomgroupstartsep}
+\setlength{\nomgroupstartsep}{18pt}
+
+\newcommand{\nomenclheader}[1]{\item[\hspace*{-\itemindent}\itshape#1]{\ } \vspace{6pt}\par}
+
+\renewcommand\nomgroup[1]{%
+	\itemsep\nomgroupstartsep
+	\ifstrequal{#1}{A}{\nomenclheader{Abkürzungen}}{%
+		\ifstrequal{#1}{E}{\newpage\nomenclheader{Lateinische Symbole}}{%
+			\ifstrequal{#1}{G}{\nomenclheader{Griechische Symbole}}{%
+				\ifstrequal{#1}{O}{\nomenclheader{Operatoren}}{%
+					\ifstrequal{#1}{X}{\nomenclheader{Tiefgestelle Indizes}}{%
+						\ifstrequal{#1}{Y}{\nomenclheader{Hochgestelle Indizes}}{}}}}}}%
+	\itemsep\nomitemsep
+}
+
+% =============================================================================
+% Fußnoten-Design
+% =============================================================================
+% Linksbündige Fußnotenmarkierungen
+\deffootnote{1.5em}{1em}{%
+	\makebox[1.5em][l]{\thefootnotemark}%
+}
+
+% Fußnoten nicht über Seiten umbrechen
+\interfootnotelinepenalty=10000
+
+% =============================================================================
+% Beschriftungen (Captions) und KOMA-Fonts
+% =============================================================================
+\addtokomafont{caption}{\small}
+\setkomafont{captionlabel}{\sffamily\bfseries}
+\setkomafont{author}{\large}
+\setkomafont{date}{\large}
+\setkomafont{publishers}{\large}
+\setkomafont{dedication}{\normalsize}
+\addtokomafont{dedication}{\raggedright}
+
+\renewcaptionname{ngerman}{\figurename}{Abb.}
+\renewcaptionname{ngerman}{\tablename}{Tab.} 
+
+% Eigene Tabellenumgebungen
+\newenvironment{tabular10}{%
+	\fontsize{10}{12}\selectfont\tabular
+}{%
+	\endtabular
+}
+
+\newenvironment{tabular7}{%
+	\fontsize{7}{12}\selectfont\tabular
+}{%
+	\endtabular
+}
+
+% =============================================================================
+% Datenimport & Hyperref (Muss fast am Ende stehen!)
+% =============================================================================
+\input{00-daten}
+
+\usepackage[
+pdftitle={\VARtitel},
+pdfsubject={\VARtyp},
+pdfauthor={\VARname},
+pdfkeywords={},  
+hidelinks,      % Links im PDF nicht umranden
+breaklinks=true % Zeilenumbruch bei langen URLs erlauben
+]{hyperref}
+
+% Cleveref als Abschluss für intelligente Querverweise
+\usepackage[german]{cleveref}
+
+% Umbruchzeichen für \code{...} nach hyperref erweitern
+\expandafter\def\expandafter\UrlBreaks\expandafter{\UrlBreaks%
+  \do\(\do\)\do\,\do\;\do\_\do\=\do\.\do\/\do\@\do\'}

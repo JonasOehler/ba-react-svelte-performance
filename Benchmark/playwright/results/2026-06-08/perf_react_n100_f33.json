@@ -1,0 +1,82 @@
+{
+  "framework": "react",
+  "gridSize": 100,
+  "intervalMs": 33,
+  "tickCount": 300,
+  "metric": "performance",
+  "repetitions": [
+    {
+      "scriptingMsPerTick": 0.2237133333333333,
+      "renderingMsPerTick": 0.14214999999999997,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.22254666666666695,
+      "renderingMsPerTick": 0.13992666666666673,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.23644333333333337,
+      "renderingMsPerTick": 0.13926000000000005,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.2197466666666663,
+      "renderingMsPerTick": 0.13942000000000015,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.22707333333333338,
+      "renderingMsPerTick": 0.13891333333333344,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.22361666666666682,
+      "renderingMsPerTick": 0.14021333333333355,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.2396433333333335,
+      "renderingMsPerTick": 0.1414300000000001,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.2186366666666666,
+      "renderingMsPerTick": 0.1386133333333335,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.22599000000000036,
+      "renderingMsPerTick": 0.14025666666666678,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.21510666666666603,
+      "renderingMsPerTick": 0.1391133333333335,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    }
+  ],
+  "n": 10,
+  "median": {
+    "scriptingMsPerTick": 0.22366500000000006,
+    "renderingMsPerTick": 0.13967333333333343,
+    "longTaskCount": 0,
+    "longTaskMs": 0
+  },
+  "iqr": {
+    "scriptingMsPerTick": 0.007326666666667064,
+    "renderingMsPerTick": 0.001143333333333274,
+    "longTaskCount": 0,
+    "longTaskMs": 0
+  }
+}

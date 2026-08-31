@@ -1,0 +1,82 @@
+{
+  "framework": "svelte",
+  "gridSize": 8000,
+  "intervalMs": 33,
+  "tickCount": 300,
+  "metric": "performance",
+  "repetitions": [
+    {
+      "scriptingMsPerTick": 3.4374333333333364,
+      "renderingMsPerTick": 8.561149999999996,
+      "longTaskCount": 1,
+      "longTaskMs": 51
+    },
+    {
+      "scriptingMsPerTick": 3.2897966666666676,
+      "renderingMsPerTick": 8.542093333333336,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 3.3509433333333343,
+      "renderingMsPerTick": 8.642623333333336,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 3.1620499999999976,
+      "renderingMsPerTick": 8.625409999999999,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 3.3593366666666675,
+      "renderingMsPerTick": 8.591380000000003,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 3.305950000000006,
+      "renderingMsPerTick": 8.557146666666666,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 3.197453333333334,
+      "renderingMsPerTick": 8.645849999999996,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 3.1250333333333327,
+      "renderingMsPerTick": 8.590660000000003,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 3.151253333333333,
+      "renderingMsPerTick": 8.59952666666667,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 3.341469999999999,
+      "renderingMsPerTick": 8.547140000000002,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    }
+  ],
+  "n": 10,
+  "median": {
+    "scriptingMsPerTick": 3.297873333333337,
+    "renderingMsPerTick": 8.591020000000004,
+    "longTaskCount": 0,
+    "longTaskMs": 0
+  },
+  "iqr": {
+    "scriptingMsPerTick": 0.1888933333333367,
+    "renderingMsPerTick": 0.06826333333333245,
+    "longTaskCount": 0,
+    "longTaskMs": 0
+  }
+}

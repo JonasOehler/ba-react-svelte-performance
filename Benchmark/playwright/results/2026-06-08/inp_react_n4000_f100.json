@@ -1,0 +1,15 @@
+{
+  "framework": "react",
+  "gridSize": 4000,
+  "intervalMs": 100,
+  "tickCount": 100,
+  "metric": "inp",
+  "n": 10,
+  "inp": {
+    "inp": 48,
+    "inputDelay": 11.800000000745058,
+    "processingTime": 0.09999999776482582,
+    "presentationDelay": 36.100000001490116,
+    "pooledEntries": 4920
+  }
+}

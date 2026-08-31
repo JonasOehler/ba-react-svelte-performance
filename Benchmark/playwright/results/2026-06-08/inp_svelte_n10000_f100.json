@@ -1,0 +1,15 @@
+{
+  "framework": "svelte",
+  "gridSize": 10000,
+  "intervalMs": 100,
+  "tickCount": 100,
+  "metric": "inp",
+  "n": 10,
+  "inp": {
+    "inp": 80,
+    "inputDelay": 1.9000000022351742,
+    "processingTime": 0,
+    "presentationDelay": 78.09999999776483,
+    "pooledEntries": 4473
+  }
+}

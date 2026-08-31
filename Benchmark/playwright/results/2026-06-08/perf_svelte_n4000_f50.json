@@ -1,0 +1,82 @@
+{
+  "framework": "svelte",
+  "gridSize": 4000,
+  "intervalMs": 50,
+  "tickCount": 200,
+  "metric": "performance",
+  "repetitions": [
+    {
+      "scriptingMsPerTick": 1.7086299999999974,
+      "renderingMsPerTick": 4.777220000000001,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 1.8305749999999994,
+      "renderingMsPerTick": 4.814399999999999,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 1.771739999999999,
+      "renderingMsPerTick": 4.814225000000001,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 1.7924099999999996,
+      "renderingMsPerTick": 4.7658499999999995,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 1.79298,
+      "renderingMsPerTick": 4.7908800000000005,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 1.7465049999999989,
+      "renderingMsPerTick": 4.69897,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 1.7720399999999996,
+      "renderingMsPerTick": 4.691405000000002,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 1.7567399999999986,
+      "renderingMsPerTick": 4.656975000000002,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 1.7744749999999985,
+      "renderingMsPerTick": 4.718355000000002,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 1.800859999999999,
+      "renderingMsPerTick": 4.734059999999998,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    }
+  ],
+  "n": 10,
+  "median": {
+    "scriptingMsPerTick": 1.773257499999999,
+    "renderingMsPerTick": 4.749954999999998,
+    "longTaskCount": 0,
+    "longTaskMs": 0
+  },
+  "iqr": {
+    "scriptingMsPerTick": 0.03624000000000138,
+    "renderingMsPerTick": 0.09191000000000038,
+    "longTaskCount": 0,
+    "longTaskMs": 0
+  }
+}

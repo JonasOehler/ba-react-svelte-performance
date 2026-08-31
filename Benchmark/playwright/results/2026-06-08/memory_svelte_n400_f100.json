@@ -1,0 +1,22 @@
+{
+  "framework": "svelte",
+  "gridSize": 400,
+  "intervalMs": 100,
+  "tickCount": 100,
+  "metric": "memory",
+  "repetitions": [
+    47024,
+    158508,
+    155832,
+    155400,
+    155940,
+    155988,
+    155956,
+    158320,
+    155816,
+    158320
+  ],
+  "n": 10,
+  "median": 155948,
+  "iqr": 2504
+}

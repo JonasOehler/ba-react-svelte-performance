@@ -1,0 +1,31 @@
+\chapter{Einleitung}
+\label{ch:einleitung}
+
+\section{Motivation}
+\label{s:motivation}
+
+Die Reaktionsfähigkeit einer Webanwendung ist ein zentraler Bestandteil der Nutzererfahrung: Verzögerungen bei der Eingabeverarbeitung sowie ruckelnde Animationen beeinträchtigen unmittelbar die wahrgenommene Qualität der Benutzeroberfläche \cite{mdn-perceived-performance-2026}. Mit der Einführung der Core Web Vitals hat Google diesen Zusammenhang messbar gemacht. Die Metrik \textit{Interaction to Next Paint} (INP) misst über die gesamte Nutzungsdauer hinweg, wie schnell eine Webseite auf Nutzereingaben reagiert \cite{web.dev_inp_2025}. Besonders herausfordernd sind datenintensive Echtzeit-Anwendungen wie Monitoring-Dashboards oder interaktive Visualisierungen. In solchen Systemen führen kontinuierliche Datenströme dazu, dass große Teile der Benutzeroberfläche in hoher Frequenz aktualisiert werden \cite{furrer-livedashboard-2018}. Jede dieser Operationen belastet den sogenannten \textit{Main Thread} des Browsers, auf dem sowohl die Framework-Logik als auch die Rendering-Pipeline ausgeführt werden \cite{mdn_mthread_2025}. Überschreitet die Verarbeitungszeit pro Frame das verfügbare Zeitfenster von etwa $16{,}7\,\text{ms}$, entstehen wahrnehmbare Stockungen (\textit{Jank}) und eine erhöhte Interaktionslatenz \cite{web.dev_rendering_2023}. Die Wahl des UI-Frameworks bestimmt dabei entscheidend, wie effizient dieses begrenzte Zeitbudget genutzt wird.
+
+\section{Ausgangssituation und Forschungslücke}
+\label{s:ausgangssituation}
+
+React und Svelte basieren auf grundsätzlich unterschiedlichen Architekturansätzen. React setzt auf ein Virtual-DOM-basiertes Laufzeitmodell, bei dem Zustandsänderungen zur Laufzeit durch einen Differenzierungsalgorithmus (\textit{Reconciliation}) in DOM-Operationen umgewandelt werden \cite{kumar-fluentreact-2024}. Svelte setzt stattdessen auf einen Compiler, der den Komponentencode bereits zur Kompilierzeit in direkten DOM-Manipulationscode übersetzt. Dadurch werden zur Laufzeit weder ein Virtual DOM noch ein Differenzierungsverfahren benötigt \cite{svelte_vdom-2018}. React 19 und Svelte 5 haben in beiden Frameworks neue Architekturkonzepte eingeführt. React 19 integriert einen Compiler, der die bisher manuelle Memoisierung von Komponenten automatisiert \cite{react_compiler_2025}. Svelte 5 führt mit sogenannten \textit{Runes} ein signalbasiertes Reaktivitätsmodell ein, bei dem zur Laufzeit automatisch erkannt wird, welche DOM-Knoten bei einer Zustandsänderung aktualisiert werden müssen \cite{svelte_runes_2023}. Da beide Neuerungen das jeweilige Reaktivitätsmodell grundlegend verändern, lassen sich frühere Leistungsmessungen nicht mehr auf die aktuellen Versionen übertragen. Diese Entwicklung wird in der bisherigen Forschungsliteratur nicht berücksichtigt. Vergleichende Leistungsstudien basieren überwiegend auf älteren Framework-Versionen wie Svelte 3 und React 16 oder 18 \cite{levlin-dom-benchmark-2020, putra-performance-2025, ollila-rendering_performance-2022}. Zudem untersuchen bestehende Benchmarks nur isolierte Operationen wie das initiale Rendern oder das Einfügen von Listeneinträgen unter kontrollierten Bedingungen \cite{krause-benchmark-2026}. Ungeklärt ist bislang, wie beide Frameworks unter einer kombinierten Dauerlast aus hoher UI-Dichte und hoher Update-Frequenz reagieren und ab welchem Punkt diese Last den Main Thread durch \textit{Long Tasks} dauerhaft blockiert (vgl.\ \cref{s:research-gap}).
+
+\section{Zielsetzung und Forschungsfrage}
+\label{s:zielsetzung}
+
+Ziel dieser Arbeit ist es, den \textit{Tipping Point} beider Frameworks empirisch zu bestimmen: den Übergang, an dem die kombinierte Last aus UI-Dichte~$n$ (Anzahl gleichzeitig gerenderter Komponenten) und Update-Frequenz~$f$ den Main Thread durch Long Tasks \cite{w3c_longtasks_2026} dauerhaft blockiert und die Interaktionslatenz messbar verschlechtert. Dabei wird konkret untersucht, welches der beiden Frameworks (React 19 mit aktiviertem Compiler oder Svelte 5 mit Runes) diesen Tipping Point bei welcher Last-Kombination zuerst erreicht und wie sich die Skalierungseigenschaften beider Architekturen unterhalb dieses Schwellenwerts unterscheiden. Die zentrale Forschungsfrage dieser Arbeit lautet daher: 
+\begin{quote}
+\textit{Wie unterscheiden sich React 19 und Svelte 5 hinsichtlich Interaktionslatenz, Scripting-Aufwand und Speicherverbrauch bei kombiniert steigender UI-Dichte und Update-Frequenz, und welche Last-Kombination führt dabei zur dauerhaften Blockierung des Main Threads?}
+\end{quote}
+Daraus ergeben sich vier Hypothesen, die den empirischen Teil der Arbeit gliedern (vgl.\ \cref{ss:hypotheses}):
+
+\noindent\textbf{H1} untersucht, ob Svelte 5 bei steigender UI-Dichte eine geringere Interaktionslatenz (INP) aufweist als React 19 und ob Reacts kooperatives Yielding der Fiber-Engine diesen Vorteil bei Last unterhalb des Frame-Budgets aufheben kann.\\
+\noindent\textbf{H2} fragt, ob der Scripting-Aufwand pro Tick bei React 19 mit steigendem~$n$ stärker wächst als bei Svelte 5.\\
+\noindent\textbf{H3} prüft, ob der Speicherverbrauch pro Komponente bei React 19 höher ist als bei Svelte 5.\\
+\noindent\textbf{H4} untersucht, ob React 19 den Tipping Point bei kombinierter Last früher erreicht als Svelte 5 und ob Sveltes synchrones Effect-Batching ohne Frame-Yielding diese Rangfolge bei extremer Last umkehren kann.
+
+\section{Aufbau der Arbeit}
+\label{s:aufbau}
+
+\Cref{ch:fundamentals} legt die theoretischen Grundlagen (Rendering-Pipeline moderner Browser, die internen Architekturen von React 19 und Svelte 5, die relevanten Metriken sowie das Skalierungsmodell mit den vier Hypothesen); \Cref{ch:state-of-the-art} ordnet die Arbeit in den Forschungsstand ein und begründet die identifizierte Forschungslücke. \Cref{ch:methodology} beschreibt Versuchsaufbau, Testmatrix, Testumgebung sowie die statistische Auswertung der Messreihen. \Cref{ch:implementation} dokumentiert die technische Umsetzung der Referenzanwendungen und des Benchmark-Pakets. \Cref{ch:results} präsentiert und diskutiert die Ergebnisse anhand der vier Hypothesen und schließt mit einer Darstellung der Limitationen.

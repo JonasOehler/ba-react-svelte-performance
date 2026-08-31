@@ -1,0 +1,82 @@
+{
+  "framework": "react",
+  "gridSize": 400,
+  "intervalMs": 100,
+  "tickCount": 100,
+  "metric": "performance",
+  "repetitions": [
+    {
+      "scriptingMsPerTick": 0.61773,
+      "renderingMsPerTick": 0.4632,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.6099900000000005,
+      "renderingMsPerTick": 0.4566999999999999,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.5962299999999999,
+      "renderingMsPerTick": 0.44534,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.6000799999999998,
+      "renderingMsPerTick": 0.44734999999999997,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.5906600000000004,
+      "renderingMsPerTick": 0.44898999999999994,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.6424500000000003,
+      "renderingMsPerTick": 0.4563899999999999,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.6069700000000003,
+      "renderingMsPerTick": 0.4504799999999999,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.6199100000000002,
+      "renderingMsPerTick": 0.45201,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.60177,
+      "renderingMsPerTick": 0.4512899999999999,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.58961,
+      "renderingMsPerTick": 0.4463900000000001,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    }
+  ],
+  "n": 10,
+  "median": {
+    "scriptingMsPerTick": 0.6043700000000002,
+    "renderingMsPerTick": 0.45088499999999987,
+    "longTaskCount": 0,
+    "longTaskMs": 0
+  },
+  "iqr": {
+    "scriptingMsPerTick": 0.021500000000000075,
+    "renderingMsPerTick": 0.009039999999999937,
+    "longTaskCount": 0,
+    "longTaskMs": 0
+  }
+}

@@ -1,0 +1,35 @@
+\chapter{Fazit}
+\label{ch:fazit}
+
+\section{Beantwortung der Forschungsfrage}
+\label{s:fazit-forschungsfrage}
+
+Die empirischen Ergebnisse zeigen, dass der Leistungsunterschied zwischen React~19 und Svelte~5 unter kombinierter Dauerlast nicht rein quantitativ, sondern architektonisch bedingt ist. Entscheidend ist dabei, dass dieselbe Architektureigenschaft jeweils Vor- und Nachteil zugleich erzeugt: Der Reconciliation-Overhead der Fiber-Engine, der bei hoher UI-Dichte zu erhöhten Scripting-Kosten, höherem Speicherbedarf und einem früheren Tipping Point führt, ermöglicht bei moderater Last und hoher Update-Frequenz ein Scheduling-Modell, das den INP stabilisiert. Umgekehrt schließt Sveltes feingranulare Reaktivität, die den Effizienzvorteil bei hoher Dichte begründet, ein vergleichbares Priorisierungsmodell aus und führt unter Extremlast zu einer Umkehr der Long-Task-Rangfolge. Eine vollständige Übersicht der Messbefunde und Hypothesenbewertungen findet sich in \cref{tab:hypotheses-summary}. Kein Framework ist damit uneingeschränkt überlegen; welches besser skaliert, lässt sich nur lastabhängig beantworten. Die vorliegende Untersuchung schließt damit die in \cref{s:ausgangssituation,s:research-gap} identifizierten Lücken der bisherigen Forschung: Nach aktuellem Stand der Literatur lagen bislang weder vergleichbare empirische Messdaten für React~19 mit aktiviertem Compiler und Svelte~5 mit Runes unter kombinierter Dauerlast vor, noch wurden INP und Frame-Budget-Überschreitung als Metriken für diese Frameworks systematisch erfasst und ausgewertet.
+
+\section{Handlungsempfehlung für die Praxis}
+\label{s:fazit-empfehlung}
+
+Für datenintensive Echtzeit-Anwendungen wie Monitoring-Dashboards (\cref{s:motivation}) lassen sich auf Basis der empirischen Ergebnisse vier Szenarien unterscheiden:
+
+\noindent Für Anwendungen mit \textbf{hoher UI-Dichte} bietet Svelte~5 strukturelle Vorteile: Der geringere Scripting-Aufwand verschiebt den Tipping Point zu höheren $n$-Werten (\cref{s:results-h2,s:results-h4}); in der Mehrzahl der gemessenen Szenarien erzielt Svelte zudem niedrigere INP-Werte (\cref{ss:results-h1-verdict}). Zwei Ausnahmen schränken diesen Vorteil bei maximaler UI-Dichte ein (\cref{ss:results-h1-phases}).
+
+\noindent In \textbf{speicherkritischen Umgebungen}, etwa auf ressourcenbeschränkten Endgeräten oder bei Anwendungen mit vielen gleichzeitig aktiven Komponenteninstanzen, ist Svelte~5 ebenfalls klar im Vorteil, da der Heap-Verbrauch (wie die internen Datenstrukturen beider Frameworks belegen) strukturell niedriger ausfällt (\cref{s:results-h3}).
+
+\noindent Bei \textbf{moderater UI-Dichte und hoher Update-Frequenz} kann React~19 die bessere Wahl sein: Das prioritätsbasierte Scheduling der Fiber-Engine erzielt in diesem Lastbereich niedrigere INP-Werte (\cref{ss:results-h1-phases}). Dieser Vorteil tritt ausschließlich unterhalb des Tipping Points auf, ab dem Reacts höhere Scripting-Kosten das Frame-Budget überschreiten (\cref{ss:results-h4-tipping}); bei steigender UI-Dichte überwiegen die strukturellen Vorteile von Svelte.
+
+\noindent Bei \textbf{niedriger UI-Dichte} sind die gemessenen Unterschiede insgesamt gering; Svelte~5 zeigt vereinzelt leichte INP-Vorteile (\cref{ss:results-h1-verdict}). Die Framework-Entscheidung kann in diesem Fall anhand anderer Kriterien wie Ökosystem, Entwicklererfahrung oder bestehender Codebasis getroffen werden.
+
+\noindent In allen Szenarien gilt: Die hier ermittelten konkreten Last-Schwellenwerte sind V8- und Chromium-spezifisch; andere JavaScript-Engines können ein abweichendes Skalierungsverhalten zeigen (\cref{s:limitations}).
+
+\section{Ausblick}
+\label{s:fazit-ausblick}
+
+Aus den Ergebnissen dieser Arbeit ergeben sich vier Richtungen für weiterführende Forschung.
+
+\noindent\textbf{Übertragbarkeit auf andere JavaScript-Engines.} Die ermittelten Schwellenwerte und der Scripting-Schnittpunkt bei $f \approx 62\,\text{Hz}$ beruhen auf V8s JIT-Optimierungsprofil (\cref{s:limitations}). Eine vergleichende Studie unter SpiderMonkey und JavaScriptCore würde klären, ob die architektonischen Unterschiede zwischen signalbasierter Reaktivität und VDOM-Reconciliation engine-unabhängige Skalierungseigenschaften erzeugen oder ob die beobachteten Tipping-Point-Werte V8-spezifisch sind.
+
+\noindent\textbf{Messung des Compiler-Anteils.} Die vorliegende Arbeit erfasst den kombinierten Effekt aus Fiber-Reconciliation und Compiler-Memoisierung, kann jedoch nicht bestimmen, wie viel jeder Anteil beiträgt (\cref{s:limitations}). Ein direkter A/B-Vergleich mit und ohne Compiler würde diese Trennung ermöglichen und erstmals den isolierten Overhead der automatischen Memoisierung messbar machen. Diese Information ist für die praktische Beurteilung des React Compilers relevant.
+
+\noindent\textbf{Ursachenanalyse der \textit{presentationDelay}-Ausreißer.} Bei $n = 10\,000$ konnten zwei Ausnahmen mit den erhobenen Metriken nicht erklärt werden: Sveltes INP-Nachteil bei $f = 20\,\text{Hz}$ und Reacts \textit{presentationDelay}-Spitze bei $f \approx 30\,\text{Hz}$ (\cref{ss:results-h1-phases,s:limitations}). Eine Chrome-Tracing-basierte Analyse würde die Zerlegung in Layout-, Paint- und Composite-Phasen ermöglichen und damit möglicherweise einen bisher unbekannten Browser-Scheduling-Effekt sichtbar machen.
+
+\noindent\textbf{Übertragbarkeit auf andere Anwendungsmuster.} Der Benchmark simuliert ein teilweise aktualisiertes Grid (\cref{ss:scenario-a}). Ob virtualisierte Listen, reaktive Formulare oder interaktive Diagramme ein vergleichbares Skalierungsverhalten zeigen, bleibt eine offene empirische Frage, insbesondere ob der hier beobachtete Scheduling-Vorteil Reacts bei moderater Last auf anzeigeorientierte oder interaktionsbasierte Anwendungsmuster übertragbar ist.

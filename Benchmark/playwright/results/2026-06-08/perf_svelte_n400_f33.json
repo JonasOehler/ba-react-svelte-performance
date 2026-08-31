@@ -1,0 +1,82 @@
+{
+  "framework": "svelte",
+  "gridSize": 400,
+  "intervalMs": 33,
+  "tickCount": 300,
+  "metric": "performance",
+  "repetitions": [
+    {
+      "scriptingMsPerTick": 0.26285333333333427,
+      "renderingMsPerTick": 0.4243600000000001,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.26487000000000016,
+      "renderingMsPerTick": 0.4204666666666669,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.2618366666666671,
+      "renderingMsPerTick": 0.4207300000000005,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.2613233333333336,
+      "renderingMsPerTick": 0.4232133333333337,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.2707933333333337,
+      "renderingMsPerTick": 0.4236933333333336,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.2643100000000005,
+      "renderingMsPerTick": 0.42489666666666703,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.2754266666666673,
+      "renderingMsPerTick": 0.4252933333333339,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.26315333333333357,
+      "renderingMsPerTick": 0.42420333333333377,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.2633300000000005,
+      "renderingMsPerTick": 0.42182000000000036,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    },
+    {
+      "scriptingMsPerTick": 0.285470000000001,
+      "renderingMsPerTick": 0.4275600000000005,
+      "longTaskCount": 0,
+      "longTaskMs": 0
+    }
+  ],
+  "n": 10,
+  "median": {
+    "scriptingMsPerTick": 0.2638200000000005,
+    "renderingMsPerTick": 0.4239483333333337,
+    "longTaskCount": 0,
+    "longTaskMs": 0
+  },
+  "iqr": {
+    "scriptingMsPerTick": 0.007939999999999447,
+    "renderingMsPerTick": 0.003076666666666672,
+    "longTaskCount": 0,
+    "longTaskMs": 0
+  }
+}

@@ -1,0 +1,124 @@
+## --- Core LaTeX Temporary Files ---
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.pdfsync
+
+## --- Bibliography Management (BibTeX/Biber) ---
+*.bbl
+*.blg
+*.run.xml
+*.bcf
+
+## --- TeXstudio Specific ---
+*.txss
+# Falls du die Zeilen-Historie von TeXstudio nicht teilen willst:
+.texstudio*
+
+## --- Tables of Contents / Lists of Figures ---
+*.lof
+*.lot
+*.nav
+*.snm
+*.vrb
+
+## --- Glossary & Indexing ---
+*.nlo
+*.nls
+*.nlg
+*.glo
+*.ist
+*.acn
+*.acr
+*.alg
+*.glg
+*.gls
+*.idx
+*.ilg
+*.ind
+
+## --- LaTeX Editor Save-Error Backups ---
+*-SAVE-ERROR
+
+# --- Systemdateien ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Abhängigkeiten ---
+# Ignoriert node_modules in allen Unterverzeichnissen (shared-logic, react-app, svelte-app)
+node_modules/
+.pnpm-store/
+.npm/
+
+# --- Build-Artefakte & Kompilierung ---
+# Shared Logic dist
+shared-logic/dist/
+*.tsbuildinfo
+
+# Vite / React / Svelte Builds
+dist/
+dist-ssr/
+*.mjs.map
+*.cjs.map
+
+# Svelte-spezifische Temporärdateien (falls SvelteKit oder Vite-Plugins diese nutzen)
+.svelte-kit/
+
+# --- Messdaten & Benchmarking (Wichtig für Bachelorarbeit) ---
+# Lokale Performance-Logs, Traces oder JSON-Exports der Messreihen
+logs/
+*.cpuprofile
+*.heapprofile
+stats.json
+
+# --- IDE & Editoren ---
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.env
+.env.local
+.env.*.local
+*.local
+
+# --- Debug-Logs (npm/yarn/pnpm/lerna) ---
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# --- Testing ---
+coverage/
+.nyc_output
+test-results/
+playwright-report/
+
+
+# --- TypeScript ---
+# Falls du tsc --watch nutzt
+lib-cov
+
+# =========================================================
+# Analyse-Ausgaben
+# =========================================================
+analysis/figures/
+
+# =========================================================
+# Python / Jupyter
+# =========================================================
+**/.ipynb_checkpoints/
+__pycache__/
+*.pyc
+.venv/
+
